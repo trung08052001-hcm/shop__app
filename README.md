@@ -1,17 +1,25 @@
-# shop_app
+# Shop App — Flutter E-commerce
 
-A new Flutter project.
+Ứng dụng mua sắm mobile xây dựng bằng Flutter theo Clean Architecture.
 
-## Getting Started
+## Tech Stack
+- Flutter + Dart
+- BLoC + GetIt (Clean Architecture)
+- Dio + GoRouter + Freezed
+- Firebase Auth (Google Sign-in)
 
-This project is a starting point for a Flutter application.
+## Features
+- Đăng nhập / Đăng ký / Google Login
+- Danh sách sản phẩm + tìm kiếm + filter
+- Chi tiết sản phẩm
+- Giỏ hàng
+- Đặt hàng + lịch sử đơn hàng
 
-A few resources to get you started if this is your first Flutter project:
+## Backend
+https://github.com/yourname/shop-app-backend
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Setup
+1. Clone repo
+2. flutter pub get
+3. dart run build_runner build
+4. flutter run
