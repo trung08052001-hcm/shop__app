@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shop_app/features/notification/presentation/bloc/notification_bloc.dart';
+import 'package:shop_app/features/notification/presentation/page/notification_sheet.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../cart/presentation/bloc/cart_bloc.dart';
@@ -79,8 +81,15 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<ProductBloc>()..add(const LoadProducts()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => getIt<ProductBloc>()..add(const LoadProducts()),
+        ),
+        BlocProvider(
+          create: (_) => getIt<NotificationBloc>()..add(LoadNotifications()),
+        ),
+      ],
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F5),
         body: SafeArea(
@@ -201,54 +210,62 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           const Spacer(),
-          BlocBuilder<CartBloc, CartState>(
-            builder: (context, cartState) => GestureDetector(
-              onTap: () => context.push(AppRoutes.cart),
-              child: Stack(
-                children: [
-                  Container(
-                    width: 44.w,
-                    height: 44.w,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 8,
-                        ),
-                      ],
+          // Xoá toàn bộ BlocBuilder<CartBloc> cũ trong header
+          // Thay bằng cái này:
+          GestureDetector(
+            onTap: () => NotificationSheet.show(context),
+            child: BlocBuilder<NotificationBloc, NotificationState>(
+              builder: (context, state) {
+                final count = state is NotificationLoaded
+                    ? state.notifications.length
+                    : 0;
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 44.w,
+                      height: 44.w,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.notifications_outlined,
+                        color: Color(0xFF6C63FF),
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.shopping_bag_outlined,
-                      color: Color(0xFF6C63FF),
-                    ),
-                  ),
-                  if (cartState.totalItems > 0)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${cartState.totalItems}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
+                    if (count > 0)
+                      Positioned(
+                        top: -4,
+                        right: -4,
+                        child: Container(
+                          width: 18,
+                          height: 18,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEF4444),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              count > 9 ? '9+' : '$count',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
+                  ],
+                );
+              },
             ),
           ),
         ],

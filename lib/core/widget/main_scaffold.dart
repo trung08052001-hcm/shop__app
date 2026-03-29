@@ -6,7 +6,7 @@ import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/order/presentation/pages/orders_page.dart';
 import '../../features/product/presentation/pages/home_page.dart';
 import '../../features/product/presentation/pages/product_list_page.dart';
-import '../../features/auth/presentation/pages/profile_page.dart';
+import '../../features/profile/presentation/page/profile_page.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -100,4 +100,3 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 }
-
