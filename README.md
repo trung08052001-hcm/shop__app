@@ -16,7 +16,7 @@
 - Đặt hàng + lịch sử đơn hàng
 
 ## Backend
-https://github.com/yourname/shop-app-backend
+[https://github.com/yourname/shop-app-backend](https://github.com/trung08052001-hcm/shop__app-backend/tree/main)
 
 ## Setup
 1. Clone repo
