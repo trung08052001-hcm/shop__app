@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shop_app/features/wishlist/presentation/bloc/wishlist_bloc.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../bloc/auth_bloc.dart';
@@ -128,7 +129,12 @@ class ProfilePage extends StatelessWidget {
                                 _MenuItem(
                                   icon: Icons.favorite_outline,
                                   label: 'Sản phẩm yêu thích',
-                                  onTap: () {},
+                                  onTap: () {
+                                    context.read<WishlistBloc>().add(
+                                      LoadWishlist(),
+                                    );
+                                    context.push(AppRoutes.wishlist);
+                                  },
                                 ),
                               ],
                             ),

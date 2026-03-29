@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../features/auth/presentation/pages/profile_page.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../features/cart/presentation/bloc/cart_bloc.dart';
 import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/order/presentation/pages/orders_page.dart';
+import '../../features/product/presentation/pages/home_page.dart';
 import '../../features/product/presentation/pages/product_list_page.dart';
+import '../../features/auth/presentation/pages/profile_page.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -17,6 +19,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
 
   final _pages = const [
+    HomePage(),
     ProductListPage(),
     CartPage(),
     OrdersPage(),
@@ -31,16 +34,22 @@ class _MainScaffoldState extends State<MainScaffold> {
         builder: (context, cartState) {
           return BottomNavigationBar(
             currentIndex: _currentIndex,
-            onTap: (index) => setState(() => _currentIndex = index),
+            onTap: (i) => setState(() => _currentIndex = i),
             selectedItemColor: const Color(0xFF6C63FF),
             unselectedItemColor: Colors.grey,
             backgroundColor: Colors.white,
+            type: BottomNavigationBarType.fixed,
             elevation: 8,
             items: [
               const BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
                 activeIcon: Icon(Icons.home),
                 label: 'Trang chủ',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.search_outlined),
+                activeIcon: Icon(Icons.search),
+                label: 'Tìm kiếm',
               ),
               BottomNavigationBarItem(
                 icon: Stack(
@@ -71,34 +80,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                       ),
                   ],
                 ),
-                activeIcon: Stack(
-                  children: [
-                    const Icon(Icons.shopping_cart),
-                    if (cartState.totalItems > 0)
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          width: 14,
-                          height: 14,
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              '${cartState.totalItems}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
+                activeIcon: const Icon(Icons.shopping_cart),
                 label: 'Giỏ hàng',
               ),
               const BottomNavigationBarItem(
@@ -109,7 +91,7 @@ class _MainScaffoldState extends State<MainScaffold> {
               const BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline),
                 activeIcon: Icon(Icons.person),
-                label: 'Cá nhân',
+                label: 'Tai khoan',
               ),
             ],
           );
@@ -118,3 +100,4 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 }
+

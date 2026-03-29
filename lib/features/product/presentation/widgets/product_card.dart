@@ -1,7 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shop_app/features/wishlist/presentation/bloc/wishlist_bloc.dart';
 import '../../domain/entities/product.dart';
 import '../../../../core/router/app_router.dart';
 
@@ -29,25 +31,69 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              child: CachedNetworkImage(
-                imageUrl: product.image,
-                height: 140.h,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => Container(
-                  color: Colors.grey[200],
-                  child: const Center(child: CircularProgressIndicator()),
+            // Ảnh + nút tim
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                  child: CachedNetworkImage(
+                    imageUrl: product.image,
+                    height: 140.h,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                      color: Colors.grey[200],
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                    errorWidget: (_, __, ___) => Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image_not_supported),
+                    ),
+                  ),
                 ),
-                errorWidget: (_, __, ___) => Container(
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.image_not_supported),
+
+                // Nút tim góc trên phải
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: BlocBuilder<WishlistBloc, WishlistState>(
+                    builder: (context, state) {
+                      final isWishlisted = state.isWishlisted(product.id);
+                      return GestureDetector(
+                        onTap: () => context.read<WishlistBloc>().add(
+                          ToggleWishlist(product),
+                        ),
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            isWishlisted
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: isWishlisted ? Colors.red : Colors.grey,
+                            size: 18,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
+              ],
             ),
+
+            // Thông tin sản phẩm
             Padding(
               padding: EdgeInsets.all(10.w),
               child: Column(

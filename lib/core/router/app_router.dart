@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 import 'package:shop_app/core/widget/main_scaffold.dart';
+import 'package:shop_app/features/wishlist/presentation/wishlist_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/product/presentation/pages/product_detail_page.dart';
@@ -28,6 +29,10 @@ final appRouter = GoRouter(
         final id = state.pathParameters['id']!;
         return ProductDetailPage(productId: id);
       },
+    ),
+    GoRoute(
+      path: AppRoutes.wishlist,
+      builder: (context, state) => const WishlistPage(),
     ),
   ],
 );
