@@ -63,6 +63,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Either<Failure, User>> getCurrentUser() async {
-    return Left(const ServerFailure('Not implemented'));
+    try {
+      final model = await remoteDataSource.getCurrentUser();
+      return Right(model.toEntity());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    }
   }
 }

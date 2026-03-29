@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shop_app/core/usecases/usecases.dart';
+import 'package:shop_app/features/auth/domain/usecases/get_current_user_usecase.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
@@ -15,15 +16,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
   final RegisterUseCase registerUseCase;
   final LogoutUseCase logoutUseCase;
+  final GetCurrentUserUseCase getCurrentUserUseCase;
 
   AuthBloc({
     required this.loginUseCase,
     required this.registerUseCase,
     required this.logoutUseCase,
+    required this.getCurrentUserUseCase,
   }) : super(AuthInitial()) {
     on<LoginSubmitted>(_onLoginSubmitted);
     on<RegisterSubmitted>(_onRegisterSubmitted);
     on<LogoutRequested>(_onLogoutRequested);
+    on<GetCurrentUserRequested>(_onGetCurrentUser);
+  }
+  //thêm sự kiện lấy thông tin người dùng hiện tại khi app khởi độ'ng
+  Future<void> _onGetCurrentUser(
+    GetCurrentUserRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final result = await getCurrentUserUseCase(NoParams());
+    result.fold(
+      (failure) => emit(AuthFailure(failure.message)),
+      (user) => emit(AuthSuccess(user)),
+    );
   }
 
   Future<void> _onLoginSubmitted(

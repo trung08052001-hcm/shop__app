@@ -32,4 +32,6 @@ class RegisterSubmitted extends AuthEvent {
   List<Object> get props => [name, email, password];
 }
 
+class GetCurrentUserRequested extends AuthEvent {}
+
 class LogoutRequested extends AuthEvent {}

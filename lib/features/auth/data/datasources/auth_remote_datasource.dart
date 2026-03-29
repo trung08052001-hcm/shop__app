@@ -13,6 +13,7 @@ abstract class AuthRemoteDataSource {
     required String password,
   });
   Future<void> logout();
+  Future<UserModel> getCurrentUser();
 }
 
 @Injectable(as: AuthRemoteDataSource)
@@ -38,6 +39,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw ServerException(
         e.response?.data?['message'] ?? 'Đăng nhập thất bại',
         statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  /// Lấy thông tin người dùng hiện tại
+  @override
+  Future<UserModel> getCurrentUser() async {
+    try {
+      final res = await dioClient.dio.get('/auth/me');
+      return UserModel.fromJson(res.data);
+    } on DioException catch (e) {
+      throw ServerException(
+        e.response?.data?['message'] ?? 'Lỗi tải thông tin',
       );
     }
   }

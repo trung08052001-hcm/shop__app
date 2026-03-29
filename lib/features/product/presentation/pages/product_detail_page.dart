@@ -1,3 +1,4 @@
+//
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,171 +7,392 @@ import '../../../../core/di/injection.dart';
 import '../bloc/product_bloc.dart';
 import '../../../cart/presentation/bloc/cart_bloc.dart';
 
-class ProductDetailPage extends StatelessWidget {
+class ProductDetailPage extends StatefulWidget {
   final String productId;
   const ProductDetailPage({super.key, required this.productId});
 
   @override
+  State<ProductDetailPage> createState() => _ProductDetailPageState();
+}
+
+class _ProductDetailPageState extends State<ProductDetailPage> {
+  bool _isWishlisted = false;
+
+  String _formatPrice(double price) {
+    return price.toInt().toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<ProductBloc>()..add(LoadProductDetail(productId)),
+      create: (_) =>
+          getIt<ProductBloc>()..add(LoadProductDetail(widget.productId)),
       child: Scaffold(
         backgroundColor: Colors.white,
         body: BlocBuilder<ProductBloc, ProductState>(
           builder: (context, state) {
             if (state is ProductLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
+              );
             }
             if (state is ProductError) {
               return Center(child: Text(state.message));
             }
             if (state is ProductDetailLoaded) {
               final p = state.product;
-              return CustomScrollView(
-                slivers: [
-                  // App Bar với ảnh
-                  SliverAppBar(
-                    expandedHeight: 300.h,
-                    pinned: true,
-                    backgroundColor: Colors.white,
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: CachedNetworkImage(
-                        imageUrl: p.image,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) =>
-                            Container(color: Colors.grey[200]),
-                        errorWidget: (_, __, ___) => Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.image_not_supported),
+              return Stack(
+                children: [
+                  CustomScrollView(
+                    slivers: [
+                      // Hero image
+                      SliverAppBar(
+                        expandedHeight: 300.h,
+                        pinned: true,
+                        backgroundColor: Colors.white,
+                        elevation: 0,
+                        leading: Padding(
+                          padding: EdgeInsets.all(8.w),
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new,
+                                size: 16,
+                                color: Color(0xFF1A1A2E),
+                              ),
+                            ),
+                          ),
+                        ),
+                        actions: [
+                          Padding(
+                            padding: EdgeInsets.all(8.w),
+                            child: GestureDetector(
+                              onTap: () => setState(
+                                () => _isWishlisted = !_isWishlisted,
+                              ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                padding: EdgeInsets.all(6.w),
+                                child: Icon(
+                                  _isWishlisted
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 18,
+                                  color: _isWishlisted
+                                      ? Colors.red
+                                      : Colors.grey,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                        flexibleSpace: FlexibleSpaceBar(
+                          background: CachedNetworkImage(
+                            imageUrl: p.image,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) =>
+                                Container(color: Colors.grey.shade100),
+                            errorWidget: (_, __, ___) => Container(
+                              color: Colors.grey.shade100,
+                              child: Icon(
+                                Icons.image_outlined,
+                                color: Colors.grey.shade300,
+                                size: 48.sp,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+
+                      // Content
+                      SliverToBoxAdapter(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(24.r),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              20.w,
+                              20.h,
+                              20.w,
+                              100.h,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Category tag
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12.w,
+                                    vertical: 4.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF6C63FF,
+                                    ).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20.r),
+                                  ),
+                                  child: Text(
+                                    p.category,
+                                    style: TextStyle(
+                                      fontSize: 11.sp,
+                                      color: const Color(0xFF6C63FF),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 10.h),
+
+                                // Tên
+                                Text(
+                                  p.name,
+                                  style: TextStyle(
+                                    fontSize: 22.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF1A1A2E),
+                                    height: 1.3,
+                                  ),
+                                ),
+                                SizedBox(height: 10.h),
+
+                                // Rating + stock
+                                Row(
+                                  children: [
+                                    Row(
+                                      children: List.generate(
+                                        5,
+                                        (i) => Icon(
+                                          i < p.rating.floor()
+                                              ? Icons.star_rounded
+                                              : Icons.star_outline_rounded,
+                                          color: Colors.amber,
+                                          size: 16.sp,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 6.w),
+                                    Text(
+                                      '${p.rating} (${p.numReviews} đánh giá)',
+                                      style: TextStyle(
+                                        fontSize: 12.sp,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 14.h),
+
+                                // Giá + tồn kho
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      '${_formatPrice(p.price)}đ',
+                                      style: TextStyle(
+                                        fontSize: 26.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFF6C63FF),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10.w,
+                                        vertical: 5.h,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: p.stock > 0
+                                            ? Colors.green.withOpacity(0.1)
+                                            : Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(
+                                          8.r,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 6,
+                                            height: 6,
+                                            decoration: BoxDecoration(
+                                              color: p.stock > 0
+                                                  ? Colors.green
+                                                  : Colors.red,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          SizedBox(width: 5.w),
+                                          Text(
+                                            p.stock > 0
+                                                ? 'Còn ${p.stock} sp'
+                                                : 'Hết hàng',
+                                            style: TextStyle(
+                                              fontSize: 11.sp,
+                                              color: p.stock > 0
+                                                  ? Colors.green
+                                                  : Colors.red,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 20.h),
+
+                                Divider(color: Colors.grey.shade100),
+                                SizedBox(height: 14.h),
+
+                                // Mô tả
+                                Text(
+                                  'Mô tả sản phẩm',
+                                  style: TextStyle(
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF1A1A2E),
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                Text(
+                                  p.description,
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    color: Colors.grey.shade600,
+                                    height: 1.7,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
 
-                  // Nội dung
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.all(20.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Category tag
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12.w,
-                              vertical: 4.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF6C63FF).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              p.category,
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color: const Color(0xFF6C63FF),
-                                fontWeight: FontWeight.w600,
-                              ),
+                  // Bottom bar — Add to cart
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: BlocBuilder<ProductBloc, ProductState>(
+                      builder: (context, state) {
+                        if (state is! ProductDetailLoaded)
+                          return const SizedBox();
+                        return Container(
+                          padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              top: BorderSide(color: Colors.grey.shade100),
                             ),
                           ),
-                          SizedBox(height: 12.h),
-
-                          // Tên sản phẩm
-                          Text(
-                            p.name,
-                            style: TextStyle(
-                              fontSize: 22.sp,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1A1A2E),
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-
-                          // Rating + reviews
-                          Row(
+                          child: Row(
                             children: [
-                              ...List.generate(5, (i) {
-                                return Icon(
-                                  i < p.rating.floor()
-                                      ? Icons.star
-                                      : Icons.star_border,
-                                  color: Colors.amber,
-                                  size: 18,
-                                );
-                              }),
-                              SizedBox(width: 8.w),
-                              Text(
-                                '${p.rating} (${p.numReviews} đánh giá)',
-                                style: TextStyle(
-                                  fontSize: 13.sp,
-                                  color: Colors.grey,
+                              // Wishlist button
+                              GestureDetector(
+                                onTap: () => setState(
+                                  () => _isWishlisted = !_isWishlisted,
+                                ),
+                                child: Container(
+                                  width: 48.w,
+                                  height: 48.w,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    border: Border.all(
+                                      color: Colors.grey.shade200,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    _isWishlisted
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: _isWishlisted
+                                        ? Colors.red
+                                        : Colors.grey,
+                                    size: 20.sp,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              // Add to cart button
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: state.product.stock > 0
+                                      ? () {
+                                          context.read<CartBloc>().add(
+                                            AddToCart(state.product),
+                                          );
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: const Text(
+                                                'Đã thêm vào giỏ hàng!',
+                                              ),
+                                              backgroundColor: const Color(
+                                                0xFF6C63FF,
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8.r),
+                                              ),
+                                              duration: const Duration(
+                                                seconds: 1,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF6C63FF),
+                                    foregroundColor: Colors.white,
+                                    minimumSize: Size(double.infinity, 48.h),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12.r),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.shopping_bag_outlined,
+                                    size: 18,
+                                  ),
+                                  label: Text(
+                                    state.product.stock > 0
+                                        ? 'Thêm vào giỏ hàng'
+                                        : 'Hết hàng',
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          SizedBox(height: 16.h),
-
-                          // Giá
-                          Text(
-                            '${_formatPrice(p.price)}đ',
-                            style: TextStyle(
-                              fontSize: 26.sp,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF6C63FF),
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-
-                          // Tồn kho
-                          Row(
-                            children: [
-                              Icon(
-                                p.stock > 0
-                                    ? Icons.check_circle_outline
-                                    : Icons.cancel_outlined,
-                                color: p.stock > 0 ? Colors.green : Colors.red,
-                                size: 16,
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                p.stock > 0
-                                    ? 'Còn ${p.stock} sản phẩm'
-                                    : 'Hết hàng',
-                                style: TextStyle(
-                                  fontSize: 13.sp,
-                                  color: p.stock > 0
-                                      ? Colors.green
-                                      : Colors.red,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 20.h),
-
-                          const Divider(),
-                          SizedBox(height: 12.h),
-
-                          // Mô tả
-                          Text(
-                            'Mô tả sản phẩm',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1A1A2E),
-                            ),
-                          ),
-                          SizedBox(height: 8.h),
-                          Text(
-                            p.description,
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              color: Colors.grey[600],
-                              height: 1.6,
-                            ),
-                          ),
-                          SizedBox(height: 100.h), // space cho button
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -179,49 +401,7 @@ class ProductDetailPage extends StatelessWidget {
             return const SizedBox();
           },
         ),
-
-        // Nút thêm vào giỏ
-        bottomNavigationBar: BlocBuilder<ProductBloc, ProductState>(
-          builder: (context, state) {
-            if (state is! ProductDetailLoaded) return const SizedBox();
-            return Container(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: ElevatedButton.icon(
-                onPressed: state.product.stock > 0
-                    ? () {
-                        context.read<CartBloc>().add(AddToCart(state.product));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Đã thêm vào giỏ hàng!'),
-                            backgroundColor: Color(0xFF6C63FF),
-                          ),
-                        );
-                      }
-                    : null,
-                icon: const Icon(Icons.shopping_cart_outlined),
-                label: const Text('Thêm vào giỏ hàng'),
-              ),
-            );
-          },
-        ),
       ),
-    );
-  }
-
-  String _formatPrice(double price) {
-    return price.toInt().toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]}.',
     );
   }
 }

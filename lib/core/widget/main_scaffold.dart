@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../features/auth/presentation/pages/profile_page.dart';
 import '../../features/cart/presentation/bloc/cart_bloc.dart';
 import '../../features/cart/presentation/pages/cart_page.dart';
 import '../../features/order/presentation/pages/orders_page.dart';
@@ -15,7 +16,12 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
 
-  final _pages = const [ProductListPage(), CartPage(), OrdersPage()];
+  final _pages = const [
+    ProductListPage(),
+    CartPage(),
+    OrdersPage(),
+    ProfilePage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +105,11 @@ class _MainScaffoldState extends State<MainScaffold> {
                 icon: Icon(Icons.receipt_long_outlined),
                 activeIcon: Icon(Icons.receipt_long),
                 label: 'Đơn hàng',
+              ),
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: 'Cá nhân',
               ),
             ],
           );
