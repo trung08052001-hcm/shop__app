@@ -1,0 +1,10 @@
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+.pub-cache/
+.pub/
+*.g.dart
+*.freezed.dart
+*.config.dart
