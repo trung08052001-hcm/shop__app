@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/google_auth_service.dart';
 import '../bloc/auth_bloc.dart';
 
 class LoginPage extends StatefulWidget {
@@ -18,12 +19,37 @@ class _LoginPageState extends State<LoginPage> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
+  bool _googleLoading = false;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  // Logic Google login tách riêng, gọi service bên ngoài
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _googleLoading = true);
+
+    final googleService = getIt<GoogleAuthService>();
+    final result = await googleService.signInWithGoogle();
+
+    if (!mounted) return;
+    setState(() => _googleLoading = false);
+
+    if (result.success) {
+      context.go(AppRoutes.home);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.message ?? 'Đăng nhập Google thất bại, thử lại nhé!',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -68,6 +94,8 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                     ),
                     SizedBox(height: 40.h),
+
+                    // Email field
                     TextFormField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
@@ -82,6 +110,8 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     SizedBox(height: 16.h),
+
+                    // Password field
                     TextFormField(
                       controller: _passwordCtrl,
                       obscureText: _obscure,
@@ -104,6 +134,8 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     SizedBox(height: 32.h),
+
+                    // Nút đăng nhập thường
                     BlocBuilder<AuthBloc, AuthState>(
                       builder: (context, state) {
                         return ElevatedButton(
@@ -132,7 +164,71 @@ class _LoginPageState extends State<LoginPage> {
                         );
                       },
                     ),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 20.h),
+
+                    // Divider "hoặc"
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          child: Text(
+                            'hoặc',
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    SizedBox(height: 20.h),
+
+                    // Nút Google — gọi _handleGoogleLogin
+                    OutlinedButton(
+                      onPressed: _googleLoading ? null : _handleGoogleLogin,
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: Size(double.infinity, 52.h),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _googleLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Image.network(
+                                  'https://developers.google.com/identity/images/g-logo.png',
+                                  width: 22,
+                                  height: 22,
+                                ),
+                                SizedBox(width: 10.w),
+                                Flexible(
+                                  child: Text(
+                                    'Đăng nhập với Google',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                    SizedBox(height: 20.h),
+
+                    // Đăng ký
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -153,6 +249,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
+                    SizedBox(height: 24.h),
                   ],
                 ),
               ),
