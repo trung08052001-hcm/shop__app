@@ -11,6 +11,8 @@ abstract class AuthRemoteDataSource {
     required String name,
     required String email,
     required String password,
+    required String address,
+    required String phone,
   });
   Future<void> logout();
   Future<UserModel> getCurrentUser();
@@ -61,11 +63,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String name,
     required String email,
     required String password,
+    required String address,
+    required String phone,
   }) async {
     try {
       final res = await dioClient.dio.post(
         '/auth/register',
-        data: {'name': name, 'email': email, 'password': password},
+        data: {
+          'name': name,
+          'email': email,
+          'password': password,
+          'address': address,
+          'phone': phone,
+        },
       );
       await prefs.setString('access_token', res.data['token']);
       return UserModel.fromJson(res.data['user']);

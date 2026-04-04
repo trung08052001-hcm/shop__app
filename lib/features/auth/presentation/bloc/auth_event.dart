@@ -21,15 +21,19 @@ class RegisterSubmitted extends AuthEvent {
   final String name;
   final String email;
   final String password;
+  final String address;
+  final String phone;
 
   const RegisterSubmitted({
     required this.name,
     required this.email,
     required this.password,
+    required this.address,
+    required this.phone,
   });
 
   @override
-  List<Object> get props => [name, email, password];
+  List<Object> get props => [name, email, password, address, phone];
 }
 
 class GetCurrentUserRequested extends AuthEvent {}

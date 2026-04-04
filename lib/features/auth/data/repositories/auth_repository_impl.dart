@@ -36,12 +36,16 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required String email,
     required String password,
+    required String address,
+    required String phone,
   }) async {
     try {
       final model = await remoteDataSource.register(
         name: name,
         email: email,
         password: password,
+        address: address,
+        phone: phone,
       );
       return Right(model.toEntity());
     } on ServerException catch (e) {
