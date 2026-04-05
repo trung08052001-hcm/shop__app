@@ -6,196 +6,231 @@ import 'package:go_router/go_router.dart';
 import 'package:shop_app/features/order/domain/entities/order.dart';
 import 'package:shop_app/features/order/presentation/bloc/order_bloc.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/error/exceptions.dart';
+import '../../datasources/coupon_remote_datasource.dart';
 import '../bloc/cart_bloc.dart';
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   const CartPage({super.key});
+
+  @override
+  State<CartPage> createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  String? _couponCode;
+  double _discountAmount = 0;
+  bool _couponLoading = false;
+  String? _couponError;
+  String? _couponSuccess;
+  final _couponCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _couponCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: getIt<CartBloc>(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Giỏ hàng',
-            style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+      child: BlocListener<CartBloc, CartState>(
+        listenWhen: (previous, current) {
+          if (previous.items.isNotEmpty && current.items.isEmpty) {
+            return true;
+          }
+
+          return _couponCode != null &&
+              previous.totalPrice != current.totalPrice &&
+              current.items.isNotEmpty;
+        },
+        listener: (_, state) {
+          if (state.items.isEmpty) {
+            _clearCouponState(clearText: true);
+            return;
+          }
+
+          _clearCouponState(
+            errorMessage:
+                'Giỏ hàng đã thay đổi, vui lòng áp dụng lại mã giảm giá.',
+          );
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(
+              'Giỏ hàng',
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
+            actions: [
+              BlocBuilder<CartBloc, CartState>(
+                builder: (context, state) {
+                  if (state.items.isEmpty) return const SizedBox();
+                  return TextButton(
+                    onPressed: () => context.read<CartBloc>().add(ClearCart()),
+                    child: const Text(
+                      'Xoá tất cả',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          actions: [
-            BlocBuilder<CartBloc, CartState>(
-              builder: (context, state) {
-                if (state.items.isEmpty) return const SizedBox();
-                return TextButton(
-                  onPressed: () => context.read<CartBloc>().add(ClearCart()),
-                  child: const Text(
-                    'Xoá tất cả',
-                    style: TextStyle(color: Colors.red),
+          body: BlocBuilder<CartBloc, CartState>(
+            builder: (context, state) {
+              if (state.items.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.shopping_cart_outlined,
+                        size: 80,
+                        color: Colors.grey[300],
+                      ),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'Giỏ hàng trống',
+                        style: TextStyle(fontSize: 16.sp, color: Colors.grey),
+                      ),
+                      SizedBox(height: 16.h),
+                      ElevatedButton(
+                        onPressed: () => context.go('/'),
+                        child: const Text('Mua sắm ngay'),
+                      ),
+                    ],
                   ),
                 );
-              },
-            ),
-          ],
-        ),
-        body: BlocBuilder<CartBloc, CartState>(
-          builder: (context, state) {
-            if (state.items.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.shopping_cart_outlined,
-                      size: 80,
-                      color: Colors.grey[300],
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'Giỏ hàng trống',
-                      style: TextStyle(fontSize: 16.sp, color: Colors.grey),
-                    ),
-                    SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: () => context.go('/'),
-                      child: const Text('Mua sắm ngay'),
-                    ),
-                  ],
-                ),
-              );
-            }
+              }
 
-            return Column(
-              children: [
-                Expanded(
-                  child: ListView.separated(
-                    padding: EdgeInsets.all(16.w),
-                    itemCount: state.items.length,
-                    separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                    itemBuilder: (_, i) {
-                      final item = state.items[i];
-                      return Container(
-                        padding: EdgeInsets.all(12.w),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            // Ảnh
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: CachedNetworkImage(
-                                imageUrl: item.product.image,
-                                width: 80.w,
-                                height: 80.w,
-                                fit: BoxFit.cover,
+              return Column(
+                children: [
+                  Expanded(
+                    child: ListView.separated(
+                      padding: EdgeInsets.all(16.w),
+                      itemCount: state.items.length,
+                      separatorBuilder: (_, _) => SizedBox(height: 12.h),
+                      itemBuilder: (_, i) {
+                        final item = state.items[i];
+                        return Container(
+                          padding: EdgeInsets.all(12.w),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 8,
                               ),
-                            ),
-                            SizedBox(width: 12.w),
-
-                            // Thông tin
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.product.name,
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    '${_formatPrice(item.product.price)}đ',
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      color: const Color(0xFF6C63FF),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8.h),
-
-                                  // Quantity control
-                                  Row(
-                                    children: [
-                                      _QuantityButton(
-                                        icon: Icons.remove,
-                                        onTap: () =>
-                                            context.read<CartBloc>().add(
-                                              UpdateQuantity(
-                                                productId: item.product.id,
-                                                quantity: item.quantity - 1,
-                                              ),
-                                            ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: CachedNetworkImage(
+                                  imageUrl: item.product.image,
+                                  width: 80.w,
+                                  height: 80.w,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.product.name,
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                      SizedBox(width: 12.w),
-                                      Text(
-                                        '${item.quantity}',
-                                        style: TextStyle(
-                                          fontSize: 14.sp,
-                                          fontWeight: FontWeight.bold,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    Text(
+                                      '${_formatPrice(item.product.price)}đ',
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        color: const Color(0xFF6C63FF),
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8.h),
+                                    Row(
+                                      children: [
+                                        _QuantityButton(
+                                          icon: Icons.remove,
+                                          onTap: () =>
+                                              context.read<CartBloc>().add(
+                                                UpdateQuantity(
+                                                  productId: item.product.id,
+                                                  quantity: item.quantity - 1,
+                                                ),
+                                              ),
                                         ),
-                                      ),
-                                      SizedBox(width: 12.w),
-                                      _QuantityButton(
-                                        icon: Icons.add,
-                                        onTap: () =>
-                                            context.read<CartBloc>().add(
-                                              UpdateQuantity(
-                                                productId: item.product.id,
-                                                quantity: item.quantity + 1,
+                                        SizedBox(width: 12.w),
+                                        Text(
+                                          '${item.quantity}',
+                                          style: TextStyle(
+                                            fontSize: 14.sp,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(width: 12.w),
+                                        _QuantityButton(
+                                          icon: Icons.add,
+                                          onTap: () =>
+                                              context.read<CartBloc>().add(
+                                                UpdateQuantity(
+                                                  productId: item.product.id,
+                                                  quantity: item.quantity + 1,
+                                                ),
                                               ),
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-
-                            // Xoá
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline,
-                                color: Colors.red,
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                ),
+                                onPressed: () => context.read<CartBloc>().add(
+                                  RemoveFromCart(item.product.id),
+                                ),
                               ),
-                              onPressed: () => context.read<CartBloc>().add(
-                                RemoveFromCart(item.product.id),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
-
-                // Tổng tiền + Checkout
-                _buildCheckout(context, state),
-              ],
-            );
-          },
+                  _buildCheckout(context, state),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
 
   Widget _buildCheckout(BuildContext context, CartState state) {
+    final payableTotal = _calculatePayableTotal(state.totalPrice);
+
     return Container(
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -203,6 +238,28 @@ class CartPage extends StatelessWidget {
       ),
       child: Column(
         children: [
+          _buildCouponInput(context, state),
+          SizedBox(height: 16.h),
+          if (_discountAmount > 0) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Mã giảm giá ($_couponCode)',
+                  style: TextStyle(fontSize: 13.sp, color: Colors.green),
+                ),
+                Text(
+                  '- ${_formatPrice(_discountAmount)}đ',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: Colors.green,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+          ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -211,7 +268,7 @@ class CartPage extends StatelessWidget {
                 style: TextStyle(fontSize: 14.sp, color: Colors.grey),
               ),
               Text(
-                '${_formatPrice(state.totalPrice)}đ',
+                '${_formatPrice(payableTotal)}đ',
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -223,6 +280,9 @@ class CartPage extends StatelessWidget {
           SizedBox(height: 16.h),
           ElevatedButton(
             onPressed: () {
+              final parentContext = context;
+              final cartBloc = parentContext.read<CartBloc>();
+              final messenger = ScaffoldMessenger.of(parentContext);
               final items = state.items
                   .map(
                     (e) => OrderItem(
@@ -236,15 +296,15 @@ class CartPage extends StatelessWidget {
                   .toList();
 
               showDialog(
-                context: context,
-                builder: (_) => BlocProvider(
+                context: parentContext,
+                builder: (dialogContext) => BlocProvider(
                   create: (_) => getIt<OrderBloc>(),
                   child: BlocConsumer<OrderBloc, OrderState>(
-                    listener: (context, orderState) {
+                    listener: (dialogContext, orderState) {
                       if (orderState is OrderCreated) {
-                        context.read<CartBloc>().add(ClearCart());
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        cartBloc.add(ClearCart());
+                        Navigator.pop(dialogContext);
+                        messenger.showSnackBar(
                           const SnackBar(
                             content: Text('Đặt hàng thành công!'),
                             backgroundColor: Colors.green,
@@ -252,8 +312,8 @@ class CartPage extends StatelessWidget {
                         );
                       }
                       if (orderState is OrderError) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        Navigator.pop(dialogContext);
+                        messenger.showSnackBar(
                           SnackBar(
                             content: Text(orderState.message),
                             backgroundColor: Colors.red,
@@ -261,23 +321,23 @@ class CartPage extends StatelessWidget {
                         );
                       }
                     },
-                    builder: (context, orderState) => AlertDialog(
+                    builder: (dialogContext, orderState) => AlertDialog(
                       title: const Text('Xác nhận đặt hàng'),
                       content: Text(
-                        'Tổng thanh toán: ${_formatPrice(state.totalPrice)}đ',
+                        'Tổng thanh toán: ${_formatPrice(payableTotal)}đ',
                       ),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () => Navigator.pop(dialogContext),
                           child: const Text('Huỷ'),
                         ),
                         ElevatedButton(
                           onPressed: orderState is OrderLoading
                               ? null
-                              : () => context.read<OrderBloc>().add(
+                              : () => dialogContext.read<OrderBloc>().add(
                                   CreateOrder(
                                     items: items,
-                                    totalPrice: state.totalPrice,
+                                    totalPrice: payableTotal,
                                   ),
                                 ),
                           child: orderState is OrderLoading
@@ -302,6 +362,133 @@ class CartPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildCouponInput(BuildContext context, CartState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _couponCtrl,
+                textCapitalization: TextCapitalization.characters,
+                decoration: InputDecoration(
+                  hintText: 'Nhập mã giảm giá',
+                  prefixIcon: const Icon(Icons.local_offer_outlined),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 12.h,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 8.w),
+            ElevatedButton(
+              onPressed: _couponLoading
+                  ? null
+                  : () => _applyCoupon(state.totalPrice),
+              style: ElevatedButton.styleFrom(minimumSize: Size(80.w, 48.h)),
+              child: _couponLoading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Áp dụng'),
+            ),
+          ],
+        ),
+        if (_couponError != null)
+          Padding(
+            padding: EdgeInsets.only(top: 6.h),
+            child: Text(
+              _couponError!,
+              style: TextStyle(fontSize: 12.sp, color: Colors.red),
+            ),
+          ),
+        if (_couponSuccess != null)
+          Padding(
+            padding: EdgeInsets.only(top: 6.h),
+            child: Text(
+              _couponSuccess!,
+              style: TextStyle(fontSize: 12.sp, color: Colors.green),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _applyCoupon(double orderTotal) async {
+    final code = _couponCtrl.text.trim().toUpperCase();
+    if (code.isEmpty) {
+      setState(() {
+        _couponError = 'Vui lòng nhập mã giảm giá.';
+        _couponSuccess = null;
+      });
+      return;
+    }
+
+    _couponCtrl.value = _couponCtrl.value.copyWith(
+      text: code,
+      selection: TextSelection.collapsed(offset: code.length),
+    );
+
+    setState(() {
+      _couponLoading = true;
+      _couponError = null;
+      _couponSuccess = null;
+    });
+
+    try {
+      final datasource = getIt<CouponRemoteDataSource>();
+      final result = await datasource.validateCoupon(
+        code: code,
+        orderTotal: orderTotal,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _discountAmount = (result['discountAmount'] as num).toDouble();
+        _couponCode = code;
+        _couponSuccess = 'Giảm ${_formatPrice(_discountAmount)}đ';
+      });
+    } on ServerException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _couponError = e.message;
+        _discountAmount = 0;
+        _couponCode = null;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _couponLoading = false);
+      }
+    }
+  }
+
+  double _calculatePayableTotal(double totalPrice) {
+    final payableTotal = totalPrice - _discountAmount;
+    return payableTotal < 0 ? 0 : payableTotal;
+  }
+
+  void _clearCouponState({bool clearText = false, String? errorMessage}) {
+    if (!mounted) return;
+
+    setState(() {
+      _couponCode = null;
+      _discountAmount = 0;
+      _couponLoading = false;
+      _couponError = errorMessage;
+      _couponSuccess = null;
+      if (clearText) {
+        _couponCtrl.clear();
+      }
+    });
   }
 
   String _formatPrice(double price) {

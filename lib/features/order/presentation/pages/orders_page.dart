@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../domain/entities/order.dart';
 import '../../../../core/di/injection.dart';
 import '../bloc/order_bloc.dart';
 
@@ -11,28 +14,41 @@ class OrdersPage extends StatefulWidget {
   State<OrdersPage> createState() => _OrdersPageState();
 }
 
-class _OrdersPageState extends State<OrdersPage>
-    with AutomaticKeepAliveClientMixin {
+class _OrdersPageState extends State<OrdersPage> {
   late final OrderBloc _bloc;
-
-  @override
-  bool get wantKeepAlive => false; // false = luôn rebuild khi quay lại tab
+  List<AppOrder> _cachedOrders = const [];
+  Timer? _autoRefreshTimer;
 
   @override
   void initState() {
     super.initState();
-    _bloc = getIt<OrderBloc>()..add(LoadMyOrders());
+    _bloc = getIt<OrderBloc>();
+    _reloadOrders();
+    _startAutoRefresh();
   }
 
   @override
   void dispose() {
+    _autoRefreshTimer?.cancel();
     _bloc.close();
     super.dispose();
   }
 
+  void _startAutoRefresh() {
+    _autoRefreshTimer?.cancel();
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (!mounted || _bloc.state is OrderLoading) return;
+      _bloc.add(LoadMyOrders());
+    });
+  }
+
+  Future<void> _reloadOrders() async {
+    if (_bloc.state is OrderLoading) return;
+    _bloc.add(LoadMyOrders());
+  }
+
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     return BlocProvider.value(
       value: _bloc,
       child: Scaffold(
@@ -49,21 +65,26 @@ class _OrdersPageState extends State<OrdersPage>
             ),
           ),
           centerTitle: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh_rounded, color: Color(0xFF6C63FF)),
-              onPressed: () => _bloc.add(LoadMyOrders()),
-            ),
-          ],
         ),
-        body: BlocBuilder<OrderBloc, OrderState>(
+        body: BlocConsumer<OrderBloc, OrderState>(
+          listener: (_, state) {
+            if (state is OrderListLoaded) {
+              _cachedOrders = state.orders;
+            }
+          },
           builder: (context, state) {
-            if (state is OrderLoading) {
+            final orders = state is OrderListLoaded
+                ? state.orders
+                : _cachedOrders;
+            final isRefreshing = state is OrderLoading && orders.isNotEmpty;
+
+            if (state is OrderLoading && orders.isEmpty) {
               return const Center(
                 child: CircularProgressIndicator(color: Color(0xFF6C63FF)),
               );
             }
-            if (state is OrderError) {
+
+            if (state is OrderError && orders.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -77,6 +98,7 @@ class _OrdersPageState extends State<OrdersPage>
                     Text(
                       state.message,
                       style: TextStyle(fontSize: 14.sp, color: Colors.grey),
+                      textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 16.h),
                     ElevatedButton(
@@ -87,39 +109,52 @@ class _OrdersPageState extends State<OrdersPage>
                 ),
               );
             }
-            if (state is OrderListLoaded) {
-              if (state.orders.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.receipt_long_outlined,
-                        size: 80.sp,
-                        color: Colors.grey.shade200,
-                      ),
-                      SizedBox(height: 16.h),
-                      Text(
-                        'Chưa có đơn hàng nào',
-                        style: TextStyle(fontSize: 16.sp, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                );
-              }
 
-              return RefreshIndicator(
-                color: const Color(0xFF6C63FF),
-                onRefresh: () async => _bloc.add(LoadMyOrders()),
-                child: ListView.separated(
-                  padding: EdgeInsets.all(16.w),
-                  itemCount: state.orders.length,
-                  separatorBuilder: (_, __) => SizedBox(height: 12.h),
-                  itemBuilder: (_, i) => _OrderCard(order: state.orders[i]),
+            if (orders.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.receipt_long_outlined,
+                      size: 80.sp,
+                      color: Colors.grey.shade200,
+                    ),
+                    SizedBox(height: 16.h),
+                    Text(
+                      'Chưa có đơn hàng nào',
+                      style: TextStyle(fontSize: 16.sp, color: Colors.grey),
+                    ),
+                  ],
                 ),
               );
             }
-            return const SizedBox();
+
+            return Stack(
+              children: [
+                RefreshIndicator(
+                  color: const Color(0xFF6C63FF),
+                  onRefresh: _reloadOrders,
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.all(16.w),
+                    itemCount: orders.length,
+                    separatorBuilder: (_, _) => SizedBox(height: 12.h),
+                    itemBuilder: (_, i) => _OrderCard(order: orders[i]),
+                  ),
+                ),
+                if (isRefreshing)
+                  const Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: LinearProgressIndicator(
+                      color: Color(0xFF6C63FF),
+                      minHeight: 2,
+                    ),
+                  ),
+              ],
+            );
           },
         ),
       ),
@@ -128,7 +163,8 @@ class _OrdersPageState extends State<OrdersPage>
 }
 
 class _OrderCard extends StatelessWidget {
-  final order;
+  final AppOrder order;
+
   const _OrderCard({required this.order});
 
   String _formatPrice(double price) {
@@ -152,7 +188,6 @@ class _OrderCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header
           Padding(
             padding: EdgeInsets.all(14.w),
             child: Row(
@@ -161,7 +196,7 @@ class _OrderCard extends StatelessWidget {
                   width: 36.w,
                   height: 36.w,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF6C63FF).withOpacity(0.1),
+                    color: const Color(0xFF6C63FF).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10.r),
                   ),
                   child: Icon(
@@ -194,10 +229,7 @@ class _OrderCard extends StatelessWidget {
               ],
             ),
           ),
-
           Divider(height: 0.5, color: Colors.grey.shade100),
-
-          // Items preview
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
             child: Column(
@@ -251,10 +283,7 @@ class _OrderCard extends StatelessWidget {
               ],
             ),
           ),
-
           Divider(height: 0.5, color: Colors.grey.shade100),
-
-          // Footer: tổng tiền
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
             child: Row(
@@ -283,6 +312,7 @@ class _OrderCard extends StatelessWidget {
 
 class _StatusChip extends StatelessWidget {
   final String status;
+
   const _StatusChip({required this.status});
 
   @override
@@ -301,7 +331,7 @@ class _StatusChip extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Text(
