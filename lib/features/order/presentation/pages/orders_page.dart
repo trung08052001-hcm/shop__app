@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/order.dart';
 import '../../../../core/di/injection.dart';
+import '../../../review/presentation/widgets/review_bottom_sheet.dart';
 import '../bloc/order_bloc.dart';
 
 class OrdersPage extends StatefulWidget {
@@ -304,6 +305,28 @@ class _OrderCard extends StatelessWidget {
               ],
             ),
           ),
+          if (order.status == 'delivered')
+            Padding(
+              padding: EdgeInsets.fromLTRB(14.w, 0, 14.w, 14.h),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => ReviewBottomSheet.show(context, order),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF6C63FF),
+                      side: const BorderSide(color: Color(0xFF6C63FF)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      minimumSize: Size(100.w, 36.h),
+                    ),
+                    child: Text('Đánh giá',
+                        style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

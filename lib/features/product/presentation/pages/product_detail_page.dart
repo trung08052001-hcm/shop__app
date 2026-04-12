@@ -6,6 +6,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/di/injection.dart';
 import '../bloc/product_bloc.dart';
 import '../../../cart/presentation/bloc/cart_bloc.dart';
+import '../../../review/presentation/bloc/review_bloc.dart';
+import '../../../review/domain/entities/app_review.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String productId;
@@ -27,9 +29,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-          getIt<ProductBloc>()..add(LoadProductDetail(widget.productId)),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => getIt<ProductBloc>()..add(LoadProductDetail(widget.productId)),
+        ),
+        BlocProvider(
+          create: (_) => getIt<ReviewBloc>()..add(LoadProductReviews(widget.productId)),
+        ),
+      ],
       child: Scaffold(
         backgroundColor: Colors.white,
         body: BlocBuilder<ProductBloc, ProductState>(
@@ -280,6 +288,40 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                     height: 1.7,
                                   ),
                                 ),
+                                SizedBox(height: 24.h),
+                                Divider(color: Colors.grey.shade100),
+                                SizedBox(height: 14.h),
+                                Text(
+                                  'Đánh giá sản phẩm',
+                                  style: TextStyle(
+                                    fontSize: 15.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF1A1A2E),
+                                  ),
+                                ),
+                                SizedBox(height: 12.h),
+                                BlocBuilder<ReviewBloc, ReviewState>(
+                                  builder: (context, reviewState) {
+                                    if (reviewState is ReviewLoading) {
+                                      return const Center(
+                                          child: CircularProgressIndicator(color: Color(0xFF6C63FF)));
+                                    } else if (reviewState is ReviewError) {
+                                      return Text(reviewState.message,
+                                          style: const TextStyle(color: Colors.red));
+                                    } else if (reviewState is ReviewLoaded) {
+                                      if (reviewState.reviews.isEmpty) {
+                                        return Text('Chưa có đánh giá nào',
+                                            style: TextStyle(color: Colors.grey, fontSize: 13.sp));
+                                      }
+                                      return Column(
+                                        children: reviewState.reviews
+                                            .map((r) => _buildReviewCard(r))
+                                            .toList(),
+                                      );
+                                    }
+                                    return const SizedBox();
+                                  },
+                                ),
                               ],
                             ),
                           ),
@@ -401,6 +443,71 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             return const SizedBox();
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildReviewCard(AppReview review) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16.r,
+                backgroundColor: const Color(0xFF6C63FF).withOpacity(0.2),
+                backgroundImage: review.userAvatar != null
+                    ? CachedNetworkImageProvider(review.userAvatar!)
+                    : null,
+                child: review.userAvatar == null
+                    ? Text(
+                        review.userName.isNotEmpty ? review.userName[0].toUpperCase() : 'U',
+                        style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF6C63FF)),
+                      )
+                    : null,
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: Text(
+                  review.userName,
+                  style: TextStyle(
+                      fontSize: 13.sp, fontWeight: FontWeight.bold, color: const Color(0xFF1A1A2E)),
+                ),
+              ),
+              Text(
+                '${review.createdAt.day}/${review.createdAt.month}/${review.createdAt.year}',
+                style: TextStyle(fontSize: 11.sp, color: Colors.grey),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Row(
+            children: List.generate(
+              5,
+              (i) => Icon(
+                i < review.rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                color: Colors.amber,
+                size: 14.sp,
+              ),
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            review.comment,
+            style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade800),
+          ),
+        ],
       ),
     );
   }
