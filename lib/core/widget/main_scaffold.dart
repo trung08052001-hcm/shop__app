@@ -7,6 +7,8 @@ import '../../features/order/presentation/pages/orders_page.dart';
 import '../../features/product/presentation/pages/home_page.dart';
 import '../../features/product/presentation/pages/product_list_page.dart';
 import '../../features/profile/presentation/page/profile_page.dart';
+import '../router/app_router.dart';
+import 'package:go_router/go_router.dart';
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -30,6 +32,11 @@ class _MainScaffoldState extends State<MainScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _pages),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push(AppRoutes.chat),
+        backgroundColor: const Color(0xFF6C63FF),
+        child: const Icon(Icons.chat_bubble, color: Colors.white),
+      ),
       bottomNavigationBar: BlocBuilder<CartBloc, CartState>(
         builder: (context, cartState) {
           return BottomNavigationBar(

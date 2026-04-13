@@ -143,10 +143,16 @@ class ProfilePage extends StatelessWidget {
                               title: 'Khác',
                               items: [
                                 _MenuItem(
+                                  icon: Icons.chat_outlined,
+                                  label: 'Trò chuyện với Admin',
+                                  onTap: () => context.push(AppRoutes.chat),
+                                ),
+                                _MenuItem(
                                   icon: Icons.help_outline,
                                   label: 'Trợ giúp & Hỗ trợ',
                                   onTap: () => _showHelp(context),
                                 ),
+
                                 _MenuItem(
                                   icon: Icons.info_outline,
                                   label: 'Về ứng dụng',

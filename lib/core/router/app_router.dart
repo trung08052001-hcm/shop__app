@@ -4,6 +4,7 @@ import 'package:shop_app/features/wishlist/presentation/wishlist_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/product/presentation/pages/product_detail_page.dart';
+import '../../features/chat/presentation/pages/chat_page.dart';
 
 part 'app_routes.dart';
 
@@ -33,6 +34,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.wishlist,
       builder: (context, state) => const WishlistPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.chat,
+      builder: (context, state) => const ChatPage(),
     ),
   ],
 );

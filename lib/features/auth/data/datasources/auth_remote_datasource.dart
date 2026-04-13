@@ -36,7 +36,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         data: {'email': email, 'password': password},
       );
       await prefs.setString('access_token', res.data['token']);
-      return UserModel.fromJson(res.data['user']);
+      final user = UserModel.fromJson(res.data['user']);
+      await prefs.setString('user_id', user.id);
+      await prefs.setString('user_name', user.name);
+      return user;
+
     } on DioException catch (e) {
       throw ServerException(
         e.response?.data?['message'] ?? 'Đăng nhập thất bại',
