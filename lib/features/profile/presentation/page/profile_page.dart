@@ -163,6 +163,11 @@ class ProfilePage extends StatelessWidget {
                                   onTap: () => _showHelp(context),
                                 ),
                                 _MenuItem(
+                                  icon: Icons.work_outline,
+                                  label: AppLocalizations.of(context)!.recruitment,
+                                  onTap: () => context.push(AppRoutes.recruitment),
+                                ),
+                                _MenuItem(
                                   icon: Icons.info_outline,
                                   label: AppLocalizations.of(context)!.aboutApp,
                                   onTap: () => _showAbout(context),

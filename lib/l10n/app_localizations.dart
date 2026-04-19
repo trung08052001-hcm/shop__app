@@ -373,6 +373,12 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Đăng ký'**
   String get register;
+
+  /// No description provided for @recruitment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tuyển dụng'**
+  String get recruitment;
 }
 
 class _AppLocalizationsDelegate

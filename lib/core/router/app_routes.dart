@@ -10,5 +10,6 @@ class AppRoutes {
   static const profile = '/profile';
   static const wishlist = '/wishlist';
   static const chat = '/chat';
+  static const recruitment = '/recruitment';
 }
 

@@ -55,5 +55,6 @@
   "loginWithGoogle": "Đăng nhập với Google",
   "googleLoginFailed": "Đăng nhập Google thất bại, thử lại nhé!",
   "dontHaveAccount": "Chưa có tài khoản? ",
-  "register": "Đăng ký"
+  "register": "Đăng ký",
+  "recruitment": "Tuyển dụng"
 }

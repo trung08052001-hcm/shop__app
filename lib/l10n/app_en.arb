@@ -45,5 +45,6 @@
   "loginWithGoogle": "Login with Google",
   "googleLoginFailed": "Google login failed, please try again!",
   "dontHaveAccount": "Don't have an account? ",
-  "register": "Register"
+  "register": "Register",
+  "recruitment": "Recruitment"
 }

@@ -147,4 +147,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get register => 'Register';
+
+  @override
+  String get recruitment => 'Recruitment';
 }

@@ -5,6 +5,7 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/product/presentation/pages/product_detail_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
+import '../../features/recruitment/presentation/pages/recruitment_page.dart';
 
 part 'app_routes.dart';
 
@@ -38,6 +39,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.chat,
       builder: (context, state) => const ChatPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.recruitment,
+      builder: (context, state) => const RecruitmentPage(),
     ),
   ],
 );

@@ -11,6 +11,7 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/bloc/locale_bloc.dart';
 import 'features/cart/presentation/bloc/cart_bloc.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,7 @@ class MyApp extends StatelessWidget {
           BlocProvider.value(value: getIt<CartBloc>()),
           BlocProvider.value(value: getIt<WishlistBloc>()..add(LoadWishlist())),
           BlocProvider.value(value: getIt<LocaleBloc>()..add(LoadStoredLocale())),
+          BlocProvider.value(value: getIt<AuthBloc>()..add(GetCurrentUserRequested())),
         ],
         child: BlocBuilder<LocaleBloc, LocaleState>(
           builder: (context, localeState) {
