@@ -1,0 +1,59 @@
+{
+  "@@locale": "vi",
+  "appTitle": "Shop App",
+  "@appTitle": {
+    "description": "Tiêu đề ứng dụng"
+  },
+  "hello": "Xin chào, {name} 👋",
+  "@hello": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shopToday": "Mua sắm hôm nay nào!",
+  "categories": "Danh mục",
+  "all": "Tất cả",
+  "featured": "Nổi bật",
+  "allProducts": "Tất cả sản phẩm",
+  "seeAll": "Xem tất cả",
+  "retry": "Thử lại",
+  "viewNow": "Xem ngay",
+  "account": "Tài khoản",
+  "personalInfo": "Thông tin cá nhân",
+  "changePassword": "Đổi mật khẩu",
+  "shippingAddress": "Địa chỉ giao hàng",
+  "orders": "Đơn hàng",
+  "orderHistory": "Lịch sử đơn hàng",
+  "wishlist": "Sản phẩm yêu thích",
+  "others": "Khác",
+  "language": "Ngôn ngữ",
+  "selectLanguage": "Chọn ngôn ngữ",
+  "chatWithAdmin": "Trò chuyện với Admin",
+  "helpSupport": "Trợ giúp & Hỗ trợ",
+  "aboutApp": "Về ứng dụng",
+  "logout": "Đăng xuất",
+  "confirmLogout": "Bạn có chắc muốn đăng xuất không?",
+  "cancel": "Huỷ",
+  "close": "Đóng",
+  "save": "Lưu",
+  "name": "Họ tên",
+  "email": "Email",
+  "phone": "Số điện thoại",
+  "address": "Địa chỉ",
+  "city": "Thành phố",
+  "login": "Đăng nhập",
+  "loginTitle": "Đăng nhập",
+  "welcomeBack": "Chào mừng bạn quay lại!",
+  "enterEmail": "Nhập email",
+  "invalidEmail": "Email không hợp lệ",
+  "password": "Mật khẩu",
+  "enterPassword": "Nhập mật khẩu",
+  "passwordTooShort": "Ít nhất 6 ký tự",
+  "or": "hoặc",
+  "loginWithGoogle": "Đăng nhập với Google",
+  "googleLoginFailed": "Đăng nhập Google thất bại, thử lại nhé!",
+  "dontHaveAccount": "Chưa có tài khoản? ",
+  "register": "Đăng ký"
+}

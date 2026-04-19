@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../error/exceptions.dart';
 
 const _baseUrl =
-    'http://10.0.2.2:3000/api'; // Android emulator trỏ về localhost
+    'http://192.168.1.29:3000/api'; // IP máy tính cho máy thật (cùng Wi-Fi)
+// const _baseUrl = 'http://10.0.2.2:3000/api'; // Android emulator
 
 @singleton
 class DioClient {

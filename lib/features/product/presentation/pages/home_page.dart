@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shop_app/features/notification/presentation/bloc/notification_bloc.dart';
 import 'package:shop_app/features/notification/presentation/page/notification_sheet.dart';
+import 'package:shop_app/l10n/app_localizations.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../cart/presentation/bloc/cart_bloc.dart';
@@ -113,7 +114,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     SliverToBoxAdapter(
                       child: _buildSectionTitle(
-                        'Nổi bật',
+                        AppLocalizations.of(context)!.featured,
                         onSeeAll: () => context.read<ProductBloc>().add(
                           const LoadProducts(),
                         ),
@@ -123,7 +124,7 @@ class _HomePageState extends State<HomePage> {
                       child: _buildFeaturedList(context, state),
                     ),
                     SliverToBoxAdapter(
-                      child: _buildSectionTitle('Tất cả sản phẩm'),
+                      child: _buildSectionTitle(AppLocalizations.of(context)!.allProducts),
                     ),
                     SliverPadding(
                       padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -169,7 +170,7 @@ class _HomePageState extends State<HomePage> {
                                 onPressed: () => context
                                     .read<ProductBloc>()
                                     .add(const LoadProducts()),
-                                child: const Text('Thử lại'),
+                                child: Text(AppLocalizations.of(context)!.retry),
                               ),
                             ],
                           ),
@@ -195,12 +196,12 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Xin chào, ${_firstName()} 👋',
+                AppLocalizations.of(context)!.hello(_firstName()),
                 style: TextStyle(fontSize: 13.sp, color: Colors.grey),
               ),
               SizedBox(height: 2.h),
               Text(
-                'Mua sắm hôm nay nào!',
+                AppLocalizations.of(context)!.shopToday,
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -347,7 +348,7 @@ class _HomePageState extends State<HomePage> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                'Xem ngay',
+                                AppLocalizations.of(context)!.viewNow,
                                 style: TextStyle(
                                   fontSize: 11.sp,
                                   fontWeight: FontWeight.bold,
@@ -391,7 +392,7 @@ class _HomePageState extends State<HomePage> {
 
   // ── Categories ───────────────────────────────────────
   Widget _buildCategories(BuildContext context, List<String> categories) {
-    final all = ['Tất cả', ...categories];
+    final all = [AppLocalizations.of(context)!.all, ...categories];
     final icons = [
       Icons.grid_view_rounded,
       Icons.phone_android_rounded,
@@ -403,7 +404,7 @@ class _HomePageState extends State<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Danh mục'),
+        _buildSectionTitle(AppLocalizations.of(context)!.categories),
         SizedBox(
           height: 88.h,
           child: ListView.builder(
@@ -412,7 +413,7 @@ class _HomePageState extends State<HomePage> {
             itemCount: all.length,
             itemBuilder: (_, i) => GestureDetector(
               onTap: () => context.read<ProductBloc>().add(
-                LoadProducts(category: all[i] == 'Tất cả' ? null : all[i]),
+                LoadProducts(category: i == 0 ? null : all[i]),
               ),
               child: Container(
                 margin: EdgeInsets.only(right: 14.w),
@@ -576,7 +577,7 @@ class _HomePageState extends State<HomePage> {
             GestureDetector(
               onTap: onSeeAll,
               child: Text(
-                'Xem tất cả',
+                AppLocalizations.of(context)!.seeAll,
                 style: TextStyle(
                   fontSize: 13.sp,
                   color: const Color(0xFF6C63FF),

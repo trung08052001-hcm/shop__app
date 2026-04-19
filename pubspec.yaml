@@ -68,6 +68,8 @@ dependencies:
   google_sign_in: ^6.2.1
   socket_io_client: ^3.1.4
   intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
 
 
 dev_dependencies:
@@ -93,7 +95,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
+  generate: true
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

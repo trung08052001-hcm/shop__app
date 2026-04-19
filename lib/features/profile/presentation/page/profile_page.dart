@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shop_app/features/wishlist/presentation/bloc/wishlist_bloc.dart';
+import 'package:shop_app/l10n/app_localizations.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/bloc/locale_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -94,11 +96,12 @@ class ProfilePage extends StatelessWidget {
                         child: Column(
                           children: [
                             _buildSection(
-                              title: 'Tài khoản',
+                              context,
+                              title: AppLocalizations.of(context)!.account,
                               items: [
                                 _MenuItem(
                                   icon: Icons.person_outline,
-                                  label: 'Thông tin cá nhân',
+                                  label: AppLocalizations.of(context)!.personalInfo,
                                   onTap: () => _showEditProfile(
                                     context,
                                     name: name,
@@ -107,28 +110,29 @@ class ProfilePage extends StatelessWidget {
                                 ),
                                 _MenuItem(
                                   icon: Icons.lock_outline,
-                                  label: 'Đổi mật khẩu',
+                                  label: AppLocalizations.of(context)!.changePassword,
                                   onTap: () => _showChangePassword(context),
                                 ),
                                 _MenuItem(
                                   icon: Icons.location_on_outlined,
-                                  label: 'Địa chỉ giao hàng',
+                                  label: AppLocalizations.of(context)!.shippingAddress,
                                   onTap: () => _showShippingAddress(context),
                                 ),
                               ],
                             ),
                             SizedBox(height: 16.h),
                             _buildSection(
-                              title: 'Đơn hàng',
+                              context,
+                              title: AppLocalizations.of(context)!.orders,
                               items: [
                                 _MenuItem(
                                   icon: Icons.receipt_long_outlined,
-                                  label: 'Lịch sử đơn hàng',
+                                  label: AppLocalizations.of(context)!.orderHistory,
                                   onTap: () {},
                                 ),
                                 _MenuItem(
                                   icon: Icons.favorite_outline,
-                                  label: 'Sản phẩm yêu thích',
+                                  label: AppLocalizations.of(context)!.wishlist,
                                   onTap: () {
                                     context.read<WishlistBloc>().add(
                                       LoadWishlist(),
@@ -140,66 +144,71 @@ class ProfilePage extends StatelessWidget {
                             ),
                             SizedBox(height: 16.h),
                             _buildSection(
-                              title: 'Khác',
+                              context,
+                              title: AppLocalizations.of(context)!.others,
                               items: [
                                 _MenuItem(
+                                  icon: Icons.language,
+                                  label: AppLocalizations.of(context)!.language,
+                                  onTap: () => _showLanguageSettings(context),
+                                ),
+                                _MenuItem(
                                   icon: Icons.chat_outlined,
-                                  label: 'Trò chuyện với Admin',
+                                  label: AppLocalizations.of(context)!.chatWithAdmin,
                                   onTap: () => context.push(AppRoutes.chat),
                                 ),
                                 _MenuItem(
                                   icon: Icons.help_outline,
-                                  label: 'Trợ giúp & Hỗ trợ',
+                                  label: AppLocalizations.of(context)!.helpSupport,
                                   onTap: () => _showHelp(context),
                                 ),
-
                                 _MenuItem(
                                   icon: Icons.info_outline,
-                                  label: 'Về ứng dụng',
+                                  label: AppLocalizations.of(context)!.aboutApp,
                                   onTap: () => _showAbout(context),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 16.h),
-
-                            // Logout
-                            GestureDetector(
-                              onTap: () => _showLogoutDialog(context),
-                              child: Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.symmetric(vertical: 16.h),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  border: Border.all(
-                                    color: Colors.red.shade100,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.logout,
-                                      color: Colors.red,
-                                      size: 18.sp,
-                                    ),
-                                    SizedBox(width: 8.w),
-                                    Text(
-                                      'Đăng xuất',
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.red,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 24.h),
                           ],
                         ),
                       ),
+                      SizedBox(height: 16.h),
+
+                      // Logout
+                      GestureDetector(
+                        onTap: () => _showLogoutDialog(context),
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12.r),
+                            border: Border.all(
+                              color: Colors.red.shade100,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.logout,
+                                color: Colors.red,
+                                size: 18.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                AppLocalizations.of(context)!.logout,
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 24.h),
                     ],
                   ),
                 ),
@@ -237,24 +246,24 @@ class ProfilePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Thông tin cá nhân',
+              AppLocalizations.of(context)!.personalInfo,
               style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20.h),
             TextFormField(
               controller: nameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Họ tên',
-                prefixIcon: Icon(Icons.person_outline),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.name,
+                prefixIcon: const Icon(Icons.person_outline),
               ),
             ),
             SizedBox(height: 12.h),
             TextFormField(
               controller: emailCtrl,
               enabled: false,
-              decoration: const InputDecoration(
-                labelText: 'Email (không thể thay đổi)',
-                prefixIcon: Icon(Icons.email_outlined),
+              decoration: InputDecoration(
+                labelText: '${AppLocalizations.of(context)!.email} (không thể thay đổi)',
+                prefixIcon: const Icon(Icons.email_outlined),
               ),
             ),
             SizedBox(height: 20.h),
@@ -262,13 +271,13 @@ class ProfilePage extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Đã cập nhật thông tin!'),
-                    backgroundColor: Color(0xFF6C63FF),
+                  SnackBar(
+                    content: Text(AppLocalizations.of(context)!.save),
+                    backgroundColor: const Color(0xFF6C63FF),
                   ),
                 );
               },
-              child: const Text('Lưu thay đổi'),
+              child: Text(AppLocalizations.of(context)!.save),
             ),
           ],
         ),
@@ -349,7 +358,7 @@ class ProfilePage extends StatelessWidget {
                   ),
                 );
               },
-              child: const Text('Đổi mật khẩu'),
+              child: Text(AppLocalizations.of(context)!.changePassword),
             ),
           ],
         ),
@@ -403,9 +412,9 @@ class ProfilePage extends StatelessWidget {
             SizedBox(height: 12.h),
             TextFormField(
               controller: cityCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Thành phố',
-                prefixIcon: Icon(Icons.location_city_outlined),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.city,
+                prefixIcon: const Icon(Icons.location_city_outlined),
               ),
             ),
             SizedBox(height: 20.h),
@@ -419,7 +428,7 @@ class ProfilePage extends StatelessWidget {
                   ),
                 );
               },
-              child: const Text('Lưu địa chỉ'),
+              child: Text(AppLocalizations.of(context)!.save),
             ),
           ],
         ),
@@ -435,7 +444,7 @@ class ProfilePage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.r),
         ),
         title: Text(
-          'Trợ giúp & Hỗ trợ',
+          AppLocalizations.of(context)!.helpSupport,
           style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
         ),
         content: Column(
@@ -458,7 +467,7 @@ class ProfilePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đóng'),
+            child: Text(AppLocalizations.of(context)!.close),
           ),
         ],
       ),
@@ -473,7 +482,7 @@ class ProfilePage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.r),
         ),
         title: Text(
-          'Về ứng dụng',
+          AppLocalizations.of(context)!.aboutApp,
           style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
         ),
         content: Column(
@@ -486,7 +495,7 @@ class ProfilePage extends StatelessWidget {
             ),
             SizedBox(height: 12.h),
             Text(
-              'Shop App',
+              AppLocalizations.of(context)!.appTitle,
               style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 4.h),
@@ -505,9 +514,55 @@ class ProfilePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Đóng'),
+            child: Text(AppLocalizations.of(context)!.close),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showLanguageSettings(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (_) => Padding(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context)!.selectLanguage,
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20.h),
+            ListTile(
+              leading: const Text('🇻🇳', style: TextStyle(fontSize: 24)),
+              title: const Text('Tiếng Việt'),
+              trailing: AppLocalizations.of(context)!.localeName == 'vi'
+                  ? const Icon(Icons.check, color: Color(0xFF6C63FF))
+                  : null,
+              onTap: () {
+                context.read<LocaleBloc>().add(const ChangeLocale('vi'));
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Text('🇺🇸', style: TextStyle(fontSize: 24)),
+              title: const Text('English'),
+              trailing: AppLocalizations.of(context)!.localeName == 'en'
+                  ? const Icon(Icons.check, color: Color(0xFF6C63FF))
+                  : null,
+              onTap: () {
+                context.read<LocaleBloc>().add(const ChangeLocale('en'));
+                Navigator.pop(context);
+              },
+            ),
+            SizedBox(height: 20.h),
+          ],
+        ),
       ),
     );
   }
@@ -524,14 +579,14 @@ class ProfilePage extends StatelessWidget {
           style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
         ),
         content: Text(
-          'Bạn có chắc muốn đăng xuất không?',
+          AppLocalizations.of(context)!.confirmLogout,
           style: TextStyle(fontSize: 14.sp, color: Colors.grey),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              'Huỷ',
+              AppLocalizations.of(context)!.cancel,
               style: TextStyle(color: Colors.grey, fontSize: 14.sp),
             ),
           ),
@@ -548,14 +603,16 @@ class ProfilePage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8.r),
               ),
             ),
-            child: Text('Đăng xuất', style: TextStyle(fontSize: 14.sp)),
+            child: Text(AppLocalizations.of(context)!.logout,
+                style: TextStyle(fontSize: 14.sp)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSection({
+  Widget _buildSection(
+    BuildContext context, {
     required String title,
     required List<_MenuItem> items,
   }) {
@@ -593,7 +650,7 @@ class ProfilePage extends StatelessWidget {
                       width: 36.w,
                       height: 36.w,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6C63FF).withOpacity(0.08),
+                        color: Color(0xFF6C63FF).withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Icon(

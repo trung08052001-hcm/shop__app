@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +6,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/google_auth_service.dart';
 import '../bloc/auth_bloc.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -44,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            result.message ?? 'Đăng nhập Google thất bại, thử lại nhé!',
+            result.message ?? AppLocalizations.of(context)!.googleLoginFailed,
           ),
           backgroundColor: Colors.red,
         ),
@@ -81,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     SizedBox(height: 60.h),
                     Text(
-                      'Đăng nhập',
+                      AppLocalizations.of(context)!.loginTitle,
                       style: TextStyle(
                         fontSize: 28.sp,
                         fontWeight: FontWeight.bold,
@@ -90,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      'Chào mừng bạn quay lại!',
+                      AppLocalizations.of(context)!.welcomeBack,
                       style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                     ),
                     SizedBox(height: 40.h),
@@ -99,13 +100,13 @@ class _LoginPageState extends State<LoginPage> {
                     TextFormField(
                       controller: _emailCtrl,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.email,
+                        prefixIcon: const Icon(Icons.email_outlined),
                       ),
                       validator: (v) {
-                        if (v == null || v.isEmpty) return 'Nhập email';
-                        if (!v.contains('@')) return 'Email không hợp lệ';
+                        if (v == null || v.isEmpty) return AppLocalizations.of(context)!.enterEmail;
+                        if (!v.contains('@')) return AppLocalizations.of(context)!.invalidEmail;
                         return null;
                       },
                     ),
@@ -116,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                       controller: _passwordCtrl,
                       obscureText: _obscure,
                       decoration: InputDecoration(
-                        labelText: 'Mật khẩu',
+                        labelText: AppLocalizations.of(context)!.password,
                         prefixIcon: const Icon(Icons.lock_outlined),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -128,8 +129,8 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       validator: (v) {
-                        if (v == null || v.isEmpty) return 'Nhập mật khẩu';
-                        if (v.length < 6) return 'Ít nhất 6 ký tự';
+                        if (v == null || v.isEmpty) return AppLocalizations.of(context)!.enterPassword;
+                        if (v.length < 6) return AppLocalizations.of(context)!.passwordTooShort;
                         return null;
                       },
                     ),
@@ -160,7 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Đăng nhập'),
+                              : Text(AppLocalizations.of(context)!.login),
                         );
                       },
                     ),
@@ -173,7 +174,7 @@ class _LoginPageState extends State<LoginPage> {
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 12.w),
                           child: Text(
-                            'hoặc',
+                            AppLocalizations.of(context)!.or,
                             style: TextStyle(
                               fontSize: 13.sp,
                               color: Colors.grey,
@@ -212,8 +213,8 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 SizedBox(width: 10.w),
                                 Flexible(
-                                  child: Text(
-                                    'Đăng nhập với Google',
+                                    child: Text(
+                                    AppLocalizations.of(context)!.loginWithGoogle,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
@@ -233,13 +234,13 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Chưa có tài khoản? ',
+                          AppLocalizations.of(context)!.dontHaveAccount,
                           style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                         ),
                         GestureDetector(
                           onTap: () => context.push(AppRoutes.register),
                           child: Text(
-                            'Đăng ký',
+                            AppLocalizations.of(context)!.register,
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.bold,
