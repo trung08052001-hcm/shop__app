@@ -53,6 +53,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel> getCurrentUser() async {
     try {
+      final token = prefs.getString('access_token');
+      if (token == null || token.isEmpty) {
+        throw ServerException('Chưa đăng nhập', statusCode: 401);
+      }
       final res = await dioClient.dio.get('/auth/me');
       return UserModel.fromJson(res.data);
     } on DioException catch (e) {

@@ -37,7 +37,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     final result = await getCurrentUserUseCase(NoParams());
     result.fold(
-      (failure) => emit(AuthFailure(failure.message)),
+      (failure) => emit(AuthLoggedOut()), // Không emit AuthFailure để tránh hiện snackbar lỗi
       (user) => emit(AuthSuccess(user)),
     );
   }

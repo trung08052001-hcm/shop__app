@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../error/exceptions.dart';
+
 
 const _baseUrl =
     'http://192.168.1.29:3000/api'; // IP máy tính cho máy thật (cùng Wi-Fi)
@@ -42,27 +42,14 @@ class _AuthInterceptor extends Interceptor {
   ) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('access_token');
-    if (token != null) {
+    
+    // Không gửi token cho các API đăng nhập, đăng ký
+    final isAuthRoute = options.path.contains('/auth/login') || options.path.contains('/auth/register');
+    
+    if (token != null && !isAuthRoute) {
       options.headers['Authorization'] = 'Bearer $token';
     }
     handler.next(options);
   }
 
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    switch (err.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.receiveTimeout:
-      case DioExceptionType.connectionError:
-        throw NetworkException();
-      default:
-        if (err.response?.statusCode == 401) {
-          throw UnauthorizedException();
-        }
-        throw ServerException(
-          err.response?.data?['message'] ?? 'Lỗi server',
-          statusCode: err.response?.statusCode,
-        );
-    }
-  }
 }

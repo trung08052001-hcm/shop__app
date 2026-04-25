@@ -61,9 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return BlocProvider(
-      create: (_) => getIt<AuthBloc>(),
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         body: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
@@ -100,7 +98,6 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
         ),
-      ),
     );
   }
 

@@ -14,9 +14,7 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<AuthBloc>()..add(GetCurrentUserRequested()),
-      child: BlocListener<AuthBloc, AuthState>(
+    return BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthLoggedOut) {
             context.go(AppRoutes.login);
@@ -221,7 +219,6 @@ class ProfilePage extends StatelessWidget {
             },
           ),
         ),
-      ),
     );
   }
 
