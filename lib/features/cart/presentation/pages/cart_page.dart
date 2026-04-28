@@ -8,6 +8,7 @@ import 'package:shop_app/features/order/presentation/bloc/order_bloc.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../datasources/coupon_remote_datasource.dart';
+import 'package:shop_app/features/auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/cart_bloc.dart';
 
 class CartPage extends StatefulWidget {
@@ -18,6 +19,7 @@ class CartPage extends StatefulWidget {
 }
 
 class _CartPageState extends State<CartPage> {
+  String? _customAddress;
   String? _couponCode;
   double _discountAmount = 0;
   bool _couponLoading = false;
@@ -238,6 +240,8 @@ class _CartPageState extends State<CartPage> {
       ),
       child: Column(
         children: [
+          _buildAddressSection(context),
+          SizedBox(height: 16.h),
           _buildCouponInput(context, state),
           SizedBox(height: 16.h),
           if (_discountAmount > 0) ...[
@@ -495,6 +499,106 @@ class _CartPageState extends State<CartPage> {
     return price.toInt().toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]}.',
+    );
+  }
+
+  Widget _buildAddressSection(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        final userAddress = authState is AuthSuccess ? authState.user.address : '';
+        final displayAddress = _customAddress ?? userAddress ?? '';
+
+        return Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12.r),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined, color: Colors.grey),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Địa chỉ nhận hàng',
+                        style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: () => _showChangeAddressDialog(context, displayAddress),
+                    child: Text(
+                      'THAY ĐỔI',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: const Color(0xFF6C63FF),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (displayAddress.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(left: 32.w, bottom: 8.h),
+                  child: Text(
+                    displayAddress,
+                    style: TextStyle(fontSize: 13.sp, color: Colors.grey.shade700),
+                  ),
+                )
+              else
+                Padding(
+                  padding: EdgeInsets.only(left: 32.w, bottom: 8.h),
+                  child: Text(
+                    'Chưa có địa chỉ nhận hàng',
+                    style: TextStyle(fontSize: 13.sp, color: Colors.red),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showChangeAddressDialog(BuildContext context, String currentAddress) {
+    final addressCtrl = TextEditingController(text: currentAddress);
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Thay đổi địa chỉ'),
+        content: TextField(
+          controller: addressCtrl,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'Nhập địa chỉ nhận hàng mới',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Huỷ'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (addressCtrl.text.trim().isNotEmpty) {
+                setState(() {
+                  _customAddress = addressCtrl.text.trim();
+                });
+              }
+              Navigator.pop(dialogContext);
+            },
+            child: const Text('Xác nhận'),
+          ),
+        ],
+      ),
     );
   }
 }
