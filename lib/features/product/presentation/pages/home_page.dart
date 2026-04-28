@@ -12,6 +12,10 @@ import '../../../../core/router/app_router.dart';
 import '../../../cart/presentation/bloc/cart_bloc.dart';
 import '../bloc/product_bloc.dart';
 import '../widgets/product_card.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:location/location.dart' as loc;
+import 'dart:async';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,6 +28,9 @@ class _HomePageState extends State<HomePage> {
   final _bannerController = PageController();
   int _currentBanner = 0;
   String _userName = '';
+  String _currentAddress = '';
+  bool _isLoadingLocation = false;
+  StreamSubscription<ServiceStatus>? _serviceStatusStreamSubscription;
 
   final _banners = [
     {
@@ -51,6 +58,19 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _loadUserName();
     _startBannerTimer();
+    _getCurrentLocation();
+
+    _serviceStatusStreamSubscription = Geolocator.getServiceStatusStream().listen((ServiceStatus status) {
+      if (status == ServiceStatus.disabled) {
+        if (!_isLoadingLocation) {
+          _getCurrentLocation();
+        }
+      } else if (status == ServiceStatus.enabled) {
+        if (!_isLoadingLocation) {
+          _getCurrentLocation();
+        }
+      }
+    });
   }
 
   Future<void> _loadUserName() async {
@@ -77,6 +97,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _bannerController.dispose();
+    _serviceStatusStreamSubscription?.cancel();
     super.dispose();
   }
 
@@ -195,9 +216,26 @@ class _HomePageState extends State<HomePage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                AppLocalizations.of(context)!.hello(_firstName()),
-                style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+              GestureDetector(
+                onTap: _getCurrentLocation,
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, size: 16.sp, color: const Color(0xFFEF4444)),
+                    SizedBox(width: 4.w),
+                    _isLoadingLocation 
+                        ? SizedBox(
+                            width: 12.w, 
+                            height: 12.w, 
+                            child: const CircularProgressIndicator(strokeWidth: 2)
+                          )
+                        : Text(
+                            _currentAddress.isEmpty 
+                                ? AppLocalizations.of(context)!.hello(_firstName()) 
+                                : _currentAddress,
+                            style: TextStyle(fontSize: 13.sp, color: Colors.grey),
+                          ),
+                  ],
+                ),
               ),
               SizedBox(height: 2.h),
               Text(
@@ -601,5 +639,83 @@ class _HomePageState extends State<HomePage> {
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]}.',
     );
+  }
+
+  Future<void> _getCurrentLocation() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingLocation = true;
+    });
+
+    final loc.Location location = loc.Location();
+
+    while (mounted) {
+      try {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        
+        if (!serviceEnabled) {
+          serviceEnabled = await location.requestService();
+        }
+
+        if (serviceEnabled) {
+          LocationPermission permission = await Geolocator.checkPermission();
+
+          if (permission == LocationPermission.denied) {
+            permission = await Geolocator.requestPermission();
+          }
+
+          if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+            Position position = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high,
+            );
+
+            List<Placemark> placemarks = await placemarkFromCoordinates(
+              position.latitude,
+              position.longitude,
+            );
+
+            if (placemarks.isNotEmpty) {
+              Placemark place = placemarks[0];
+              if (!mounted) return;
+              
+              final addressStr = '${place.street}, ${place.subAdministrativeArea ?? place.locality ?? place.administrativeArea}';
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.setString('gps_address', addressStr);
+
+              setState(() {
+                _currentAddress = addressStr;
+                _isLoadingLocation = false;
+              });
+            } else {
+              if (!mounted) return;
+              setState(() {
+                _isLoadingLocation = false;
+              });
+            }
+            break; // Lấy được vị trí thành công thì thoát vòng lặp
+          } else {
+            // Chưa có quyền
+            if (!mounted) return;
+            setState(() {
+              _isLoadingLocation = true;
+            });
+            await Future.delayed(const Duration(seconds: 5));
+          }
+        } else {
+          // Chưa bật GPS
+          if (!mounted) return;
+          setState(() {
+            _isLoadingLocation = true;
+          });
+          await Future.delayed(const Duration(seconds: 5));
+        }
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _isLoadingLocation = true;
+        });
+        await Future.delayed(const Duration(seconds: 5));
+      }
+    }
   }
 }

@@ -8,218 +8,217 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/bloc/locale_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<AuthBloc>()..add(GetCurrentUserRequested()),
-      child: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthLoggedOut) {
-            context.go(AppRoutes.login);
-          }
-        },
-        child: Scaffold(
-          backgroundColor: const Color(0xFFF5F5F5),
-          body: BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, state) {
-              final name = state is AuthSuccess ? state.user.name : '...';
-              final email = state is AuthSuccess ? state.user.email : '...';
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthLoggedOut) {
+          context.go(AppRoutes.login);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
+        body: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            final name = state is AuthSuccess ? state.user.name : '...';
+            final email = state is AuthSuccess ? state.user.email : '...';
+            final phone = state is AuthSuccess ? (state.user.phone ?? '') : '';
 
-              return SafeArea(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Header
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(
-                          vertical: 32.h,
-                          horizontal: 20.w,
+            return SafeArea(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Header
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 32.h,
+                        horizontal: 20.w,
+                      ),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF6C63FF),
+                        borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(32),
                         ),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF6C63FF),
-                          borderRadius: BorderRadius.vertical(
-                            bottom: Radius.circular(32),
+                      ),
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 40.r,
+                            backgroundColor: Colors.white.withOpacity(0.3),
+                            child: Text(
+                              name.isNotEmpty ? name[0].toUpperCase() : '?',
+                              style: TextStyle(
+                                fontSize: 32.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                        ),
-                        child: Column(
-                          children: [
-                            CircleAvatar(
-                              radius: 40.r,
-                              backgroundColor: Colors.white.withOpacity(0.3),
-                              child: Text(
-                                name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                style: TextStyle(
-                                  fontSize: 32.sp,
-                                  fontWeight: FontWeight.bold,
+                          SizedBox(height: 12.h),
+                          state is AuthLoading
+                              ? const CircularProgressIndicator(
                                   color: Colors.white,
+                                )
+                              : Column(
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: TextStyle(
+                                        fontSize: 20.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4.h),
+                                    Text(
+                                      email,
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        color: Colors.white.withOpacity(0.8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 20.h),
+
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Column(
+                        children: [
+                          _buildSection(
+                            context,
+                            title: AppLocalizations.of(context)!.account,
+                            items: [
+                              _MenuItem(
+                                icon: Icons.person_outline,
+                                label: AppLocalizations.of(context)!.personalInfo,
+                                onTap: () => _showEditProfile(
+                                  context,
+                                  name: name,
+                                  email: email,
                                 ),
                               ),
-                            ),
-                            SizedBox(height: 12.h),
-                            state is AuthLoading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                : Column(
-                                    children: [
-                                      Text(
-                                        name,
-                                        style: TextStyle(
-                                          fontSize: 20.sp,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4.h),
-                                      Text(
-                                        email,
-                                        style: TextStyle(
-                                          fontSize: 13.sp,
-                                          color: Colors.white.withOpacity(0.8),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ],
-                        ),
-                      ),
-
-                      SizedBox(height: 20.h),
-
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.w),
-                        child: Column(
-                          children: [
-                            _buildSection(
-                              context,
-                              title: AppLocalizations.of(context)!.account,
-                              items: [
-                                _MenuItem(
-                                  icon: Icons.person_outline,
-                                  label: AppLocalizations.of(context)!.personalInfo,
-                                  onTap: () => _showEditProfile(
-                                    context,
-                                    name: name,
-                                    email: email,
-                                  ),
-                                ),
-                                _MenuItem(
-                                  icon: Icons.lock_outline,
-                                  label: AppLocalizations.of(context)!.changePassword,
-                                  onTap: () => _showChangePassword(context),
-                                ),
-                                _MenuItem(
-                                  icon: Icons.location_on_outlined,
-                                  label: AppLocalizations.of(context)!.shippingAddress,
-                                  onTap: () => _showShippingAddress(context),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 16.h),
-                            _buildSection(
-                              context,
-                              title: AppLocalizations.of(context)!.orders,
-                              items: [
-                                _MenuItem(
-                                  icon: Icons.receipt_long_outlined,
-                                  label: AppLocalizations.of(context)!.orderHistory,
-                                  onTap: () {},
-                                ),
-                                _MenuItem(
-                                  icon: Icons.favorite_outline,
-                                  label: AppLocalizations.of(context)!.wishlist,
-                                  onTap: () {
-                                    context.read<WishlistBloc>().add(
-                                      LoadWishlist(),
-                                    );
-                                    context.push(AppRoutes.wishlist);
-                                  },
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 16.h),
-                            _buildSection(
-                              context,
-                              title: AppLocalizations.of(context)!.others,
-                              items: [
-                                _MenuItem(
-                                  icon: Icons.language,
-                                  label: AppLocalizations.of(context)!.language,
-                                  onTap: () => _showLanguageSettings(context),
-                                ),
-                                _MenuItem(
-                                  icon: Icons.chat_outlined,
-                                  label: AppLocalizations.of(context)!.chatWithAdmin,
-                                  onTap: () => context.push(AppRoutes.chat),
-                                ),
-                                _MenuItem(
-                                  icon: Icons.help_outline,
-                                  label: AppLocalizations.of(context)!.helpSupport,
-                                  onTap: () => _showHelp(context),
-                                ),
-                                _MenuItem(
-                                  icon: Icons.work_outline,
-                                  label: AppLocalizations.of(context)!.recruitment,
-                                  onTap: () => context.push(AppRoutes.recruitment),
-                                ),
-                                _MenuItem(
-                                  icon: Icons.info_outline,
-                                  label: AppLocalizations.of(context)!.aboutApp,
-                                  onTap: () => _showAbout(context),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-
-                      // Logout
-                      GestureDetector(
-                        onTap: () => _showLogoutDialog(context),
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(vertical: 16.h),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12.r),
-                            border: Border.all(
-                              color: Colors.red.shade100,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.logout,
-                                color: Colors.red,
-                                size: 18.sp,
+                              _MenuItem(
+                                icon: Icons.lock_outline,
+                                label: AppLocalizations.of(context)!.changePassword,
+                                onTap: () => _showChangePassword(context),
                               ),
-                              SizedBox(width: 8.w),
-                              Text(
-                                AppLocalizations.of(context)!.logout,
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.red,
-                                ),
+                              _MenuItem(
+                                icon: Icons.location_on_outlined,
+                                label: AppLocalizations.of(context)!.shippingAddress,
+                                onTap: () => _showShippingAddress(context, phone: phone),
                               ),
                             ],
                           ),
+                          SizedBox(height: 16.h),
+                          _buildSection(
+                            context,
+                            title: AppLocalizations.of(context)!.orders,
+                            items: [
+                              _MenuItem(
+                                icon: Icons.receipt_long_outlined,
+                                label: AppLocalizations.of(context)!.orderHistory,
+                                onTap: () {},
+                              ),
+                              _MenuItem(
+                                icon: Icons.favorite_outline,
+                                label: AppLocalizations.of(context)!.wishlist,
+                                onTap: () {
+                                  context.read<WishlistBloc>().add(
+                                    LoadWishlist(),
+                                  );
+                                  context.push(AppRoutes.wishlist);
+                                },
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16.h),
+                          _buildSection(
+                            context,
+                            title: AppLocalizations.of(context)!.others,
+                            items: [
+                              _MenuItem(
+                                icon: Icons.language,
+                                label: AppLocalizations.of(context)!.language,
+                                onTap: () => _showLanguageSettings(context),
+                              ),
+                              _MenuItem(
+                                icon: Icons.chat_outlined,
+                                label: AppLocalizations.of(context)!.chatWithAdmin,
+                                onTap: () => context.push(AppRoutes.chat),
+                              ),
+                              _MenuItem(
+                                icon: Icons.help_outline,
+                                label: AppLocalizations.of(context)!.helpSupport,
+                                onTap: () => _showHelp(context),
+                              ),
+                              _MenuItem(
+                                icon: Icons.work_outline,
+                                label: AppLocalizations.of(context)!.recruitment,
+                                onTap: () => context.push(AppRoutes.recruitment),
+                              ),
+                              _MenuItem(
+                                icon: Icons.info_outline,
+                                label: AppLocalizations.of(context)!.aboutApp,
+                                onTap: () => _showAbout(context),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // Logout
+                    GestureDetector(
+                      onTap: () => _showLogoutDialog(context),
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 16.h),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12.r),
+                          border: Border.all(
+                            color: Colors.red.shade100,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.logout,
+                              color: Colors.red,
+                              size: 18.sp,
+                            ),
+                            SizedBox(width: 8.w),
+                            Text(
+                              AppLocalizations.of(context)!.logout,
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: 24.h),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 24.h),
+                  ],
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -371,10 +370,26 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  void _showShippingAddress(BuildContext context) {
-    final addressCtrl = TextEditingController();
-    final cityCtrl = TextEditingController();
-    final phoneCtrl = TextEditingController();
+  void _showShippingAddress(BuildContext context, {required String phone}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final gpsAddress = prefs.getString('gps_address') ?? '';
+
+    String initialAddress = '';
+    String initialCity = '';
+
+    if (gpsAddress.contains(', ')) {
+      final parts = gpsAddress.split(', ');
+      initialAddress = parts[0];
+      initialCity = parts.sublist(1).join(', ');
+    } else {
+      initialAddress = gpsAddress;
+    }
+
+    final addressCtrl = TextEditingController(text: initialAddress);
+    final cityCtrl = TextEditingController(text: initialCity);
+    final phoneCtrl = TextEditingController(text: phone);
+
+    if (!context.mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -425,6 +440,16 @@ class ProfilePage extends StatelessWidget {
             SizedBox(height: 20.h),
             ElevatedButton(
               onPressed: () {
+                final newAddress = '${addressCtrl.text}, ${cityCtrl.text}';
+                final newPhone = phoneCtrl.text;
+                
+                context.read<AuthBloc>().add(
+                  UpdateProfileRequested(
+                    address: newAddress,
+                    phone: newPhone,
+                  ),
+                );
+
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(

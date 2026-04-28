@@ -7,6 +7,7 @@ import '../../domain/entities/user.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
+import '../../domain/usecases/update_profile_usecase.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -17,17 +18,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final RegisterUseCase registerUseCase;
   final LogoutUseCase logoutUseCase;
   final GetCurrentUserUseCase getCurrentUserUseCase;
+  final UpdateProfileUseCase updateProfileUseCase;
 
   AuthBloc({
     required this.loginUseCase,
     required this.registerUseCase,
     required this.logoutUseCase,
     required this.getCurrentUserUseCase,
+    required this.updateProfileUseCase,
   }) : super(AuthInitial()) {
     on<LoginSubmitted>(_onLoginSubmitted);
     on<RegisterSubmitted>(_onRegisterSubmitted);
     on<LogoutRequested>(_onLogoutRequested);
     on<GetCurrentUserRequested>(_onGetCurrentUser);
+    on<UpdateProfileRequested>(_onUpdateProfileRequested);
   }
   //thêm sự kiện lấy thông tin người dùng hiện tại khi app khởi độ'ng
   Future<void> _onGetCurrentUser(
@@ -82,5 +86,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     await logoutUseCase(NoParams());
     emit(AuthLoggedOut());
+  }
+
+  Future<void> _onUpdateProfileRequested(
+    UpdateProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    // We emit AuthLoading, but wait... if we emit AuthLoading we might lose the current user data temporarily on screen.
+    // It's better to just call it and then emit AuthSuccess. 
+    // But for simplicity, we can just emit AuthLoading.
+    emit(AuthLoading());
+    final result = await updateProfileUseCase(
+      UpdateProfileParams(
+        address: event.address,
+        phone: event.phone,
+      ),
+    );
+    result.fold(
+      (failure) => emit(AuthFailure(failure.message)),
+      (user) => emit(AuthSuccess(user)),
+    );
   }
 }

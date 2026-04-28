@@ -39,3 +39,16 @@ class RegisterSubmitted extends AuthEvent {
 class GetCurrentUserRequested extends AuthEvent {}
 
 class LogoutRequested extends AuthEvent {}
+
+class UpdateProfileRequested extends AuthEvent {
+  final String address;
+  final String phone;
+
+  const UpdateProfileRequested({
+    required this.address,
+    required this.phone,
+  });
+
+  @override
+  List<Object> get props => [address, phone];
+}

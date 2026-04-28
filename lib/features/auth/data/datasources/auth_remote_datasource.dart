@@ -16,6 +16,7 @@ abstract class AuthRemoteDataSource {
   });
   Future<void> logout();
   Future<UserModel> getCurrentUser();
+  Future<UserModel> updateProfile({required String address, required String phone});
 }
 
 @Injectable(as: AuthRemoteDataSource)
@@ -94,5 +95,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout() async {
     await prefs.remove('access_token');
+  }
+  @override
+  Future<UserModel> updateProfile({
+    required String address,
+    required String phone,
+  }) async {
+    try {
+      final res = await dioClient.dio.put(
+        '/auth/me',
+        data: {
+          'address': address,
+          'phone': phone,
+        },
+      );
+      return UserModel.fromJson(res.data);
+    } on DioException catch (e) {
+      throw ServerException(
+        e.response?.data?['message'] ?? 'Cập nhật thất bại',
+        statusCode: e.response?.statusCode,
+      );
+    }
   }
 }
