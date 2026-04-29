@@ -3,6 +3,7 @@ import 'package:shop_app/core/widget/main_scaffold.dart';
 import 'package:shop_app/features/wishlist/presentation/wishlist_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/product/presentation/pages/product_detail_page.dart';
 import '../../features/chat/presentation/pages/chat_page.dart';
 import '../../features/recruitment/presentation/pages/recruitment_page.dart';
@@ -14,9 +15,13 @@ import 'package:shop_app/features/profile/presentation/page/profile_page.dart';
 part 'app_routes.dart';
 
 final appRouter = GoRouter(
-  initialLocation: AppRoutes.login,
+  initialLocation: AppRoutes.splash,
   debugLogDiagnostics: true,
   routes: [
+    GoRoute(
+      path: AppRoutes.splash,
+      builder: (context, state) => const SplashPage(),
+    ),
     GoRoute(
       path: AppRoutes.home,
       builder: (context, state) => const MainScaffold(),

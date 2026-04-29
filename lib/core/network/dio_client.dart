@@ -81,10 +81,26 @@ class _AuthInterceptor extends Interceptor {
         } catch (e) {
           await prefs.remove('access_token');
           await prefs.remove('refresh_token');
-          throw UnauthorizedException();
+          return handler.reject(
+            DioException(
+              requestOptions: err.requestOptions,
+              response: err.response,
+              error: UnauthorizedException(),
+              type: DioExceptionType.badResponse,
+            ),
+          );
         }
       } else {
-        throw UnauthorizedException();
+        await prefs.remove('access_token');
+        await prefs.remove('refresh_token');
+        return handler.reject(
+          DioException(
+            requestOptions: err.requestOptions,
+            response: err.response,
+            error: UnauthorizedException(),
+            type: DioExceptionType.badResponse,
+          ),
+        );
       }
     }
 
@@ -92,14 +108,35 @@ class _AuthInterceptor extends Interceptor {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.connectionError:
-        throw NetworkException();
+        return handler.reject(
+          DioException(
+            requestOptions: err.requestOptions,
+            response: err.response,
+            error: NetworkException(),
+            type: err.type,
+          ),
+        );
       default:
         if (err.response?.statusCode == 401) {
-          throw UnauthorizedException();
+          return handler.reject(
+            DioException(
+              requestOptions: err.requestOptions,
+              response: err.response,
+              error: UnauthorizedException(),
+              type: DioExceptionType.badResponse,
+            ),
+          );
         }
-        throw ServerException(
-          err.response?.data?['message'] ?? 'Lỗi server',
-          statusCode: err.response?.statusCode,
+        return handler.reject(
+          DioException(
+            requestOptions: err.requestOptions,
+            response: err.response,
+            error: ServerException(
+              err.response?.data?['message'] ?? 'Lỗi server',
+              statusCode: err.response?.statusCode,
+            ),
+            type: DioExceptionType.badResponse,
+          ),
         );
     }
   }
