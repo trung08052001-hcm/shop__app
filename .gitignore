@@ -8,3 +8,4 @@ build/
 *.g.dart
 *.freezed.dart
 *.config.dart
+.env

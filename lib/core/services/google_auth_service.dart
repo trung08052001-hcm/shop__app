@@ -48,6 +48,9 @@ class GoogleAuthService {
       // Lưu JWT token giống login thường
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('access_token', res.data['token']);
+      if (res.data['refreshToken'] != null) {
+        await prefs.setString('refresh_token', res.data['refreshToken']);
+      }
       await prefs.setString('user_name', firebaseUser.displayName ?? '');
       await prefs.setString('user_email', firebaseUser.email ?? '');
       await prefs.setString('user_avatar', firebaseUser.photoURL ?? '');

@@ -6,6 +6,7 @@ import 'package:hive_flutter/adapters.dart';
 import 'package:shop_app/features/wishlist/presentation/bloc/wishlist_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shop_app/l10n/app_localizations.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -16,6 +17,7 @@ import 'core/di/bloc_providers.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await dotenv.load(fileName: ".env");
   await Hive.initFlutter();
   await configureDependencies();
   runApp(const MyApp());

@@ -2,11 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:injectable/injectable.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../error/exceptions.dart';
 
-const _baseUrl =
-    'http://192.168.1.29:3000/api'; // IP máy tính cho máy thật (cùng Wi-Fi)
-// const _baseUrl = 'http://10.0.2.2:3000/api'; // Android emulator
+final String _baseUrl = dotenv.env['API_URL'] ?? 'http://10.0.2.2:3000/api';
 
 @singleton
 class DioClient {
@@ -22,7 +21,7 @@ class DioClient {
     );
 
     _dio.interceptors.addAll([
-      _AuthInterceptor(),
+      _AuthInterceptor(_dio),
       PrettyDioLogger(
         requestHeader: true,
         requestBody: true,
@@ -35,6 +34,10 @@ class DioClient {
 }
 
 class _AuthInterceptor extends Interceptor {
+  final Dio dio;
+
+  _AuthInterceptor(this.dio);
+
   @override
   void onRequest(
     RequestOptions options,
@@ -49,7 +52,42 @@ class _AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    if (err.response?.statusCode == 401 && 
+        err.requestOptions.path != '/auth/refresh' && 
+        err.requestOptions.path != '/auth/login') {
+      
+      final prefs = await SharedPreferences.getInstance();
+      final refreshToken = prefs.getString('refresh_token');
+      
+      if (refreshToken != null) {
+        try {
+          final refreshDio = Dio(BaseOptions(baseUrl: _baseUrl));
+          final res = await refreshDio.post('/auth/refresh', data: {
+            'refreshToken': refreshToken
+          });
+          
+          final newAccessToken = res.data['token'];
+          final newRefreshToken = res.data['refreshToken'];
+          
+          await prefs.setString('access_token', newAccessToken);
+          if (newRefreshToken != null) {
+            await prefs.setString('refresh_token', newRefreshToken);
+          }
+          
+          err.requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+          final cloneReq = await dio.fetch(err.requestOptions);
+          return handler.resolve(cloneReq);
+        } catch (e) {
+          await prefs.remove('access_token');
+          await prefs.remove('refresh_token');
+          throw UnauthorizedException();
+        }
+      } else {
+        throw UnauthorizedException();
+      }
+    }
+
     switch (err.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.receiveTimeout:

@@ -37,6 +37,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         data: {'email': email, 'password': password},
       );
       await prefs.setString('access_token', res.data['token']);
+      if (res.data['refreshToken'] != null) {
+        await prefs.setString('refresh_token', res.data['refreshToken']);
+      }
       final user = UserModel.fromJson(res.data['user']);
       await prefs.setString('user_id', user.id);
       await prefs.setString('user_name', user.name);
@@ -83,6 +86,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         },
       );
       await prefs.setString('access_token', res.data['token']);
+      if (res.data['refreshToken'] != null) {
+        await prefs.setString('refresh_token', res.data['refreshToken']);
+      }
       return UserModel.fromJson(res.data['user']);
     } on DioException catch (e) {
       throw ServerException(
@@ -95,6 +101,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout() async {
     await prefs.remove('access_token');
+    await prefs.remove('refresh_token');
   }
   @override
   Future<UserModel> updateProfile({
